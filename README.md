@@ -104,7 +104,7 @@ CAN_INTERFACES=can0,can1 ./control-service
 Launch the control service:
 
 ```bash
-go run main.go -can-url http://localhost:8080 -port 9099
+go run main.go -can-url http://localhost:5260 -port 9099
 ```
 
 ## Logging and Monitoring
