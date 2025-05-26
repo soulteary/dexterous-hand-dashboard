@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
+	"hands/cli"
+	"hands/define"
 	"log"
 	"math/rand"
 	"net/http"
@@ -69,22 +70,6 @@ type SensorData struct {
 	LastUpdate   time.Time `json:"lastUpdate"`
 }
 
-// API 响应结构体
-type ApiResponse struct {
-	Status  string      `json:"status"`
-	Message string      `json:"message,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
-// 配置结构体
-type Config struct {
-	CanServiceURL       string
-	WebPort             string
-	DefaultInterface    string
-	AvailableInterfaces []string
-}
-
 // 手型配置结构体
 type HandConfig struct {
 	HandType string `json:"handType"`
@@ -100,92 +85,9 @@ var (
 	stopAnimationMap map[string]chan struct{} // 每个接口的停止动画通道
 	handConfigs      map[string]*HandConfig   // 每个接口的手型配置
 	handConfigMutex  sync.RWMutex
-	config           *Config
+	config           *define.Config
 	serverStartTime  time.Time
 )
-
-// 解析配置
-func parseConfig() *Config {
-	cfg := &Config{}
-
-	// 命令行参数
-	var canInterfacesFlag string
-	flag.StringVar(&cfg.CanServiceURL, "can-url", "http://127.0.0.1:5260", "CAN 服务的 URL")
-	flag.StringVar(&cfg.WebPort, "port", "9099", "Web 服务的端口")
-	flag.StringVar(&cfg.DefaultInterface, "interface", "", "默认 CAN 接口")
-	flag.StringVar(&canInterfacesFlag, "can-interfaces", "", "支持的 CAN 接口列表，用逗号分隔 (例如: can0,can1,vcan0)")
-	flag.Parse()
-
-	// 环境变量覆盖命令行参数
-	if envURL := os.Getenv("CAN_SERVICE_URL"); envURL != "" {
-		cfg.CanServiceURL = envURL
-	}
-	if envPort := os.Getenv("WEB_PORT"); envPort != "" {
-		cfg.WebPort = envPort
-	}
-	if envInterface := os.Getenv("DEFAULT_INTERFACE"); envInterface != "" {
-		cfg.DefaultInterface = envInterface
-	}
-	if envInterfaces := os.Getenv("CAN_INTERFACES"); envInterfaces != "" {
-		canInterfacesFlag = envInterfaces
-	}
-
-	// 解析可用接口
-	if canInterfacesFlag != "" {
-		cfg.AvailableInterfaces = strings.Split(canInterfacesFlag, ",")
-		// 清理空白字符
-		for i, iface := range cfg.AvailableInterfaces {
-			cfg.AvailableInterfaces[i] = strings.TrimSpace(iface)
-		}
-	}
-
-	// 如果没有指定可用接口，从CAN服务获取
-	if len(cfg.AvailableInterfaces) == 0 {
-		log.Println("🔍 未指定可用接口，将从 CAN 服务获取...")
-		cfg.AvailableInterfaces = getAvailableInterfacesFromCanService(cfg.CanServiceURL)
-	}
-
-	// 设置默认接口
-	if cfg.DefaultInterface == "" && len(cfg.AvailableInterfaces) > 0 {
-		cfg.DefaultInterface = cfg.AvailableInterfaces[0]
-	}
-
-	return cfg
-}
-
-// 从CAN服务获取可用接口
-func getAvailableInterfacesFromCanService(canServiceURL string) []string {
-	resp, err := http.Get(canServiceURL + "/api/interfaces")
-	if err != nil {
-		log.Printf("⚠️ 无法从 CAN 服务获取接口列表: %v，使用默认配置", err)
-		return []string{"can0", "can1"} // 默认接口
-	}
-	defer resp.Body.Close()
-
-	var apiResp ApiResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		log.Printf("⚠️ 解析 CAN 服务接口响应失败: %v，使用默认配置", err)
-		return []string{"can0", "can1"}
-	}
-
-	if data, ok := apiResp.Data.(map[string]interface{}); ok {
-		if configuredPorts, ok := data["configuredPorts"].([]interface{}); ok {
-			interfaces := make([]string, 0, len(configuredPorts))
-			for _, port := range configuredPorts {
-				if portStr, ok := port.(string); ok {
-					interfaces = append(interfaces, portStr)
-				}
-			}
-			if len(interfaces) > 0 {
-				log.Printf("✅ 从 CAN 服务获取到接口: %v", interfaces)
-				return interfaces
-			}
-		}
-	}
-
-	log.Println("⚠️ 无法从 CAN 服务获取有效接口，使用默认配置")
-	return []string{"can0", "can1"}
-}
 
 // 验证接口是否可用
 func isValidInterface(ifName string) bool {
@@ -309,7 +211,7 @@ func sendToCanService(msg CanMessage) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errResp ApiResponse
+		var errResp define.ApiResponse
 		if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
 			return fmt.Errorf("CAN 服务返回错误: HTTP %d", resp.StatusCode)
 		}
@@ -757,7 +659,7 @@ func checkCanServiceStatus() map[string]bool {
 		return result
 	}
 
-	var statusResp ApiResponse
+	var statusResp define.ApiResponse
 	if err := json.NewDecoder(resp.Body).Decode(&statusResp); err != nil {
 		log.Printf("❌ 解析 CAN 服务状态失败: %v", err)
 		result := make(map[string]bool)
@@ -800,7 +702,7 @@ func setupRoutes(r *gin.Engine) {
 		api.POST("/hand-type", func(c *gin.Context) {
 			var req HandTypeRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的手型设置请求: " + err.Error(),
 				})
@@ -809,7 +711,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 验证接口
 			if !isValidInterface(req.Interface) {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.AvailableInterfaces),
 				})
@@ -831,7 +733,7 @@ func setupRoutes(r *gin.Engine) {
 				handTypeName = "左手"
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status:  "success",
 				Message: fmt.Sprintf("接口 %s 手型已设置为%s (0x%X)", req.Interface, handTypeName, req.HandId),
 				Data: map[string]interface{}{
@@ -846,7 +748,7 @@ func setupRoutes(r *gin.Engine) {
 		api.POST("/fingers", func(c *gin.Context) {
 			var req FingerPoseRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的手指姿态数据: " + err.Error(),
 				})
@@ -856,7 +758,7 @@ func setupRoutes(r *gin.Engine) {
 			// 验证每个值是否在范围内
 			for _, v := range req.Pose {
 				if v < 0 || v > 255 {
-					c.JSON(http.StatusBadRequest, ApiResponse{
+					c.JSON(http.StatusBadRequest, define.ApiResponse{
 						Status: "error",
 						Error:  "手指姿态值必须在 0-255 范围内",
 					})
@@ -871,7 +773,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 验证接口
 			if !isValidInterface(req.Interface) {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.AvailableInterfaces),
 				})
@@ -881,14 +783,14 @@ func setupRoutes(r *gin.Engine) {
 			stopAllAnimations(req.Interface)
 
 			if err := sendFingerPose(req.Interface, req.Pose, req.HandType, req.HandId); err != nil {
-				c.JSON(http.StatusInternalServerError, ApiResponse{
+				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
 					Error:  "发送手指姿态失败: " + err.Error(),
 				})
 				return
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status:  "success",
 				Message: "手指姿态指令发送成功",
 				Data:    map[string]interface{}{"interface": req.Interface, "pose": req.Pose},
@@ -899,7 +801,7 @@ func setupRoutes(r *gin.Engine) {
 		api.POST("/palm", func(c *gin.Context) {
 			var req PalmPoseRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的掌部姿态数据: " + err.Error(),
 				})
@@ -909,7 +811,7 @@ func setupRoutes(r *gin.Engine) {
 			// 验证每个值是否在范围内
 			for _, v := range req.Pose {
 				if v < 0 || v > 255 {
-					c.JSON(http.StatusBadRequest, ApiResponse{
+					c.JSON(http.StatusBadRequest, define.ApiResponse{
 						Status: "error",
 						Error:  "掌部姿态值必须在 0-255 范围内",
 					})
@@ -924,7 +826,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 验证接口
 			if !isValidInterface(req.Interface) {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.AvailableInterfaces),
 				})
@@ -934,14 +836,14 @@ func setupRoutes(r *gin.Engine) {
 			stopAllAnimations(req.Interface)
 
 			if err := sendPalmPose(req.Interface, req.Pose, req.HandType, req.HandId); err != nil {
-				c.JSON(http.StatusInternalServerError, ApiResponse{
+				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
 					Error:  "发送掌部姿态失败: " + err.Error(),
 				})
 				return
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status:  "success",
 				Message: "掌部姿态指令发送成功",
 				Data:    map[string]interface{}{"interface": req.Interface, "pose": req.Pose},
@@ -962,7 +864,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 验证接口
 			if !isValidInterface(ifName) {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.AvailableInterfaces),
 				})
@@ -1019,7 +921,7 @@ func setupRoutes(r *gin.Engine) {
 				fingerPose = []byte{64, 64, 64, 64, 192, 64}
 				message = "已设置数字9手势"
 			default:
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的预设姿势",
 				})
@@ -1033,14 +935,14 @@ func setupRoutes(r *gin.Engine) {
 			}
 
 			if err := sendFingerPose(ifName, fingerPose, handType, handId); err != nil {
-				c.JSON(http.StatusInternalServerError, ApiResponse{
+				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
 					Error:  "设置预设姿势失败: " + err.Error(),
 				})
 				return
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status:  "success",
 				Message: message,
 				Data:    map[string]interface{}{"interface": ifName, "pose": fingerPose},
@@ -1051,7 +953,7 @@ func setupRoutes(r *gin.Engine) {
 		api.POST("/animation", func(c *gin.Context) {
 			var req AnimationRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的动画请求: " + err.Error(),
 				})
@@ -1065,7 +967,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 验证接口
 			if !isValidInterface(req.Interface) {
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.AvailableInterfaces),
 				})
@@ -1077,7 +979,7 @@ func setupRoutes(r *gin.Engine) {
 
 			// 如果是停止命令，直接返回
 			if req.Type == "stop" {
-				c.JSON(http.StatusOK, ApiResponse{
+				c.JSON(http.StatusOK, define.ApiResponse{
 					Status:  "success",
 					Message: fmt.Sprintf("%s 动画已停止", req.Interface),
 				})
@@ -1093,20 +995,20 @@ func setupRoutes(r *gin.Engine) {
 			switch req.Type {
 			case "wave":
 				startWaveAnimation(req.Interface, req.Speed, req.HandType, req.HandId)
-				c.JSON(http.StatusOK, ApiResponse{
+				c.JSON(http.StatusOK, define.ApiResponse{
 					Status:  "success",
 					Message: fmt.Sprintf("%s 波浪动画已启动", req.Interface),
 					Data:    map[string]interface{}{"interface": req.Interface, "speed": req.Speed},
 				})
 			case "sway":
 				startSwayAnimation(req.Interface, req.Speed, req.HandType, req.HandId)
-				c.JSON(http.StatusOK, ApiResponse{
+				c.JSON(http.StatusOK, define.ApiResponse{
 					Status:  "success",
 					Message: fmt.Sprintf("%s 横向摆动动画已启动", req.Interface),
 					Data:    map[string]interface{}{"interface": req.Interface, "speed": req.Speed},
 				})
 			default:
-				c.JSON(http.StatusBadRequest, ApiResponse{
+				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  "无效的动画类型",
 				})
@@ -1124,7 +1026,7 @@ func setupRoutes(r *gin.Engine) {
 			if ifName != "" {
 				// 验证接口
 				if !isValidInterface(ifName) {
-					c.JSON(http.StatusBadRequest, ApiResponse{
+					c.JSON(http.StatusBadRequest, define.ApiResponse{
 						Status: "error",
 						Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.AvailableInterfaces),
 					})
@@ -1133,19 +1035,19 @@ func setupRoutes(r *gin.Engine) {
 
 				// 请求特定接口的数据
 				if sensorData, ok := sensorDataMap[ifName]; ok {
-					c.JSON(http.StatusOK, ApiResponse{
+					c.JSON(http.StatusOK, define.ApiResponse{
 						Status: "success",
 						Data:   sensorData,
 					})
 				} else {
-					c.JSON(http.StatusInternalServerError, ApiResponse{
+					c.JSON(http.StatusInternalServerError, define.ApiResponse{
 						Status: "error",
 						Error:  "传感器数据不存在",
 					})
 				}
 			} else {
 				// 返回所有接口的数据
-				c.JSON(http.StatusOK, ApiResponse{
+				c.JSON(http.StatusOK, define.ApiResponse{
 					Status: "success",
 					Data:   sensorDataMap,
 				})
@@ -1184,7 +1086,7 @@ func setupRoutes(r *gin.Engine) {
 				}
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status: "success",
 				Data: map[string]interface{}{
 					"interfaces":          interfaceStatuses,
@@ -1206,7 +1108,7 @@ func setupRoutes(r *gin.Engine) {
 				"defaultInterface":    config.DefaultInterface,
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status: "success",
 				Data:   responseData,
 			})
@@ -1233,7 +1135,7 @@ func setupRoutes(r *gin.Engine) {
 				}
 			}
 
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status: "success",
 				Data:   result,
 			})
@@ -1241,7 +1143,7 @@ func setupRoutes(r *gin.Engine) {
 
 		// 健康检查端点 - 新增，用于调试
 		api.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, ApiResponse{
+			c.JSON(http.StatusOK, define.ApiResponse{
 				Status:  "success",
 				Message: "CAN Control Service is running",
 				Data: map[string]interface{}{
@@ -1290,7 +1192,7 @@ func main() {
 	}
 
 	// 解析配置
-	config = parseConfig()
+	config = cli.ParseConfig()
 
 	// 验证配置
 	if len(config.AvailableInterfaces) == 0 {
