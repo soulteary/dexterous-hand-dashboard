@@ -110,7 +110,7 @@ func parseConfig() *Config {
 
 	// 命令行参数
 	var canInterfacesFlag string
-	flag.StringVar(&cfg.CanServiceURL, "can-url", "http://10.211.55.7:8080", "CAN 服务的 URL")
+	flag.StringVar(&cfg.CanServiceURL, "can-url", "http://127.0.0.1:5260", "CAN 服务的 URL")
 	flag.StringVar(&cfg.WebPort, "port", "9099", "Web 服务的端口")
 	flag.StringVar(&cfg.DefaultInterface, "interface", "", "默认 CAN 接口")
 	flag.StringVar(&canInterfacesFlag, "can-interfaces", "", "支持的 CAN 接口列表，用逗号分隔 (例如: can0,can1,vcan0)")
@@ -1258,7 +1258,7 @@ func setupRoutes(r *gin.Engine) {
 func printUsage() {
 	fmt.Println("CAN Control Service with Hand Type Support")
 	fmt.Println("Usage:")
-	fmt.Println("  -can-url string         CAN 服务的 URL (default: http://10.211.55.7:8080)")
+	fmt.Println("  -can-url string         CAN 服务的 URL (default: http://127.0.0.1:5260)")
 	fmt.Println("  -port string            Web 服务的端口 (default: 9099)")
 	fmt.Println("  -interface string       默认 CAN 接口")
 	fmt.Println("  -can-interfaces string  支持的 CAN 接口列表，用逗号分隔")
@@ -1279,7 +1279,7 @@ func printUsage() {
 	fmt.Println("  ./control-service -can-interfaces can0,can1,vcan0")
 	fmt.Println("  ./control-service -interface can1 -can-interfaces can0,can1")
 	fmt.Println("  CAN_INTERFACES=can0,can1,vcan0 ./control-service")
-	fmt.Println("  CAN_SERVICE_URL=http://localhost:8080 ./control-service")
+	fmt.Println("  CAN_SERVICE_URL=http://localhost:5260 ./control-service")
 }
 
 func main() {

@@ -102,7 +102,7 @@ CAN_INTERFACES=can0,can1 ./control-service
 启动控制服务：
 
 ```bash
-go run main.go -can-url http://localhost:8080 -port 9099
+go run main.go -can-url http://localhost:5260 -port 9099
 ```
 
 ## 日志与监控
