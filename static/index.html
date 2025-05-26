@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵巧手 Linker Hand L10 控制面板</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>灵巧手 Linker Hand L10 控制面板</h1>
+    
+    <!-- 手部配置面板 -->
+    <div class="hands-config">
+        <h3>🤖 手部配置管理</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="refresh-all" class="refresh-button">刷新所有接口</button>
+            <button onclick="debugSystemStatus()" class="refresh-button" style="background-color: #e67e22;">🔍 系统调试</button>
+        </div>
+        <div class="hands-grid" id="hands-grid">
+            <!-- 手部配置项将在这里动态生成 -->
+        </div>
+    </div>
+
+    <!-- 连接警告 -->
+    <div class="connection-warning" id="connection-warning">
+        ⚠️ CAN 服务连接异常，请检查服务状态或网络连接
+    </div>
+
+    <!-- 全局控制 -->
+    <div class="global-controls">
+        <h4>🎮 全局控制</h4>
+        <div class="control-buttons-grid">
+            <button id="send-all-finger-poses" class="global">发送所有手指姿态</button>
+            <button id="send-all-palm-poses" class="global">发送所有掌部姿态</button>
+            <button id="reset-all-hands" class="stop">重置所有手部</button>
+            <button id="stop-all-animations" class="stop">停止所有动画</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <h2>手指控制 <span class="info-badge">指令0x01</span></h2>
+            
+            <div class="slider-group">
+                <h3>手指关节控制</h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>拇指 (Thumb)</span>
+                        <span class="value-display" id="finger0-value">64</span>
+                    </div>
+                    <input type="range" id="finger0" class="finger-slider" min="0" max="255" value="64">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>拇指转动 (Thumb Rotate)</span>
+                        <span class="value-display" id="finger1-value">64</span>
+                    </div>
+                    <input type="range" id="finger1" class="finger-slider" min="0" max="255" value="64">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>食指 (Index)</span>
+                        <span class="value-display" id="finger2-value">64</span>
+                    </div>
+                    <input type="range" id="finger2" class="finger-slider" min="0" max="255" value="64">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>中指 (Middle)</span>
+                        <span class="value-display" id="finger3-value">64</span>
+                    </div>
+                    <input type="range" id="finger3" class="finger-slider" min="0" max="255" value="64">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>无名指 (Ring)</span>
+                        <span class="value-display" id="finger4-value">64</span>
+                    </div>
+                    <input type="range" id="finger4" class="finger-slider" min="0" max="255" value="64">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>小指 (Pinky)</span>
+                        <span class="value-display" id="finger5-value">64</span>
+                    </div>
+                    <input type="range" id="finger5" class="finger-slider" min="0" max="255" value="64">
+                </div>
+               
+            </div>
+            
+            <div class="slider-group">
+                <h3>掌部控制 <span class="info-badge">指令0x04</span></h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节 7</span>
+                        <span class="value-display" id="palm0-value">128</span>
+                    </div>
+                    <input type="range" id="palm0" class="finger-slider" min="0" max="255" value="128">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节 8</span>
+                        <span class="value-display" id="palm1-value">128</span>
+                    </div>
+                    <input type="range" id="palm1" class="finger-slider" min="0" max="255" value="128">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节 9</span>
+                        <span class="value-display" id="palm2-value">128</span>
+                    </div>
+                    <input type="range" id="palm2" class="finger-slider" min="0" max="255" value="128">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节 10</span>
+                        <span class="value-display" id="palm3-value">128</span>
+                    </div>
+                    <input type="range" id="palm3" class="finger-slider" min="0" max="255" value="128">
+                </div>
+            </div>
+        </div>
+        
+        <div class="animation-panel">
+            <h2>预设动作</h2>
+            <div class="preset-grid">
+                <button class="preset" id="pose-fist">握拳</button>
+                <button class="preset" id="pose-open">张开</button>
+                <button class="preset" id="pose-pinch">捏取</button>
+                <button class="preset" id="pose-point">食指指点</button>
+                <button class="preset" id="pose-yeah">Yeah</button>
+                <button class="preset" id="pose-thumbs-up">竖起大拇指</button>
+                <button class="preset" id="pose-wave">手指波浪</button>
+                <button class="preset" id="pose-big-fist">紧握拳</button>
+                <button class="preset" id="pose-big-open">完全张开</button>
+                <button class="preset" id="pose-yo">Yo!</button>
+                <button class="preset" id="pose-gun">PONG</button>
+                <button class="preset" id="pose-ok">OK!</button>
+            </div>
+
+            <h3>NUM Pose</h3>
+            <div class="preset-grid">
+                <button class="preset-num-pose" id="pose-1">1</button>
+                <button class="preset-num-pose" id="pose-2">2</button>
+                <button class="preset-num-pose" id="pose-3">3</button>
+                <button class="preset-num-pose" id="pose-4">4</button>
+                <button class="preset-num-pose" id="pose-5">5</button>
+                <button class="preset-num-pose" id="pose-6">6</button>
+                <button class="preset-num-pose" id="pose-7">7</button>
+                <button class="preset-num-pose" id="pose-8">8</button>
+                <button class="preset-num-pose" id="pose-9">9</button>
+                <button onclick="triggerButtonsSequentially()">auto</button>
+                <button id="refill-core">Refill core</button>
+                <button onclick="window.startSequentialHandAnimation()">SequentialHandAnimation</button>
+                <button onclick="window.startCustomSequentialAnimation()">CustomSequentialAnimation</button>
+                <button onclick="window.startWaveAnimation()">WaveAnimation</button>
+                <button onclick="window.startThumbsUpRelay()">ThumbsUpRelay</button>
+                <button onclick="window.startPointingRelay()">PointingRelay</button>
+                <button onclick="window.startNumberCountdown()">NumberCountdown</button>
+                <button onclick="window.startMexicanWave()">MexicanWave</button>
+                <button onclick="window.startFistOpenWave()">FistOpenWave</button>
+                <button onclick="window.startBidirectionalWave()">BidirectionalWave</button>
+
+
+
+            </div>
+
+            <h3 style="margin-top: 20px;">动画控制</h3>
+            <div class="animation-controls">
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>动作速度 (毫秒)</span>
+                        <span class="value-display" id="speed-value">500</span>
+                    </div>
+                    <input type="range" id="animation-speed" min="30" max="1000" step="30" value="500">
+                </div>
+                <div class="control-buttons">
+                    <button id="start-wave">波浪动画</button>
+                    <button id="start-sway">横向摆动</button>
+                    <button id="stop-animation" class="stop">停止动画</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-panel">
+            <h2>状态监控</h2>
+            <div class="status-output" id="status-log">
+                <div class="log-entry">
+                    <span class="status-indicator status-info"></span>
+                    <span class="log-timestamp">00:00:00</span>
+                    正在初始化系统...
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <h3>启用的手部状态</h3>
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                    <div id="enabled-hands-status">等待更新...</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <h3>传感器数据 (TBD)</h3>
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                    <div id="sensor-data">等待更新...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p style="
+        font-style: italic;
+        font-size: 12px;
+        padding: 12px;">使用 CAN 进行连接后，或许需要手动启动 Linux 网卡：<code style="
+            border: 1px solid pink;
+            padding: 4px;
+            border-radius: 4px;
+            background: #0a0a0a;
+            font-size: 10px;
+            color: #fff;">sudo ip link set can0 up type can bitrate 1000000</code></p>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
