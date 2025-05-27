@@ -23,7 +23,7 @@ func initService() {
 	log.Printf("   - 默认接口: %s", config.Config.DefaultInterface)
 
 	// 初始化手型配置映射
-	hands.InitHands()
+	hands.Init()
 
 	log.Println("✅ 控制服务初始化完成")
 }
