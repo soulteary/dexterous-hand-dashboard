@@ -6,7 +6,6 @@ import (
 	"hands/define"
 	"log"
 	"math/rand/v2"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -104,11 +103,6 @@ func ParseHandType(handType string, handId uint32, ifName string) uint32 {
 	}
 }
 
-// 验证接口是否可用
-func IsValidInterface(ifName string) bool {
-	return slices.Contains(config.Config.AvailableInterfaces, ifName)
-}
-
 // 发送手指姿态指令 - 支持手型参数
 func SendFingerPose(ifName string, pose []byte, handType string, handId uint32) error {
 	if len(pose) != 6 {
@@ -121,7 +115,7 @@ func SendFingerPose(ifName string, pose []byte, handType string, handId uint32) 
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		return fmt.Errorf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces)
 	}
 
@@ -182,7 +176,7 @@ func SendPalmPose(ifName string, pose []byte, handType string, handId uint32) er
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		return fmt.Errorf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces)
 	}
 
@@ -236,7 +230,7 @@ func resetToDefaultPose(ifName string) {
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		log.Printf("⚠️ 尝试重置无效接口: %s", ifName)
 		return
 	}

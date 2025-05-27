@@ -16,15 +16,6 @@ var (
 	ServerStartTime time.Time
 )
 
-func isValidInterface(ifName string) bool {
-	for _, validIface := range config.Config.AvailableInterfaces {
-		if ifName == validIface {
-			return true
-		}
-	}
-	return false
-}
-
 func SetupRoutes(r *gin.Engine) {
 	r.StaticFile("/", "./static/index.html")
 	r.Static("/static", "./static")
@@ -43,7 +34,7 @@ func SetupRoutes(r *gin.Engine) {
 			}
 
 			// 验证接口
-			if !isValidInterface(req.Interface) {
+			if !config.IsValidInterface(req.Interface) {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
@@ -105,7 +96,7 @@ func SetupRoutes(r *gin.Engine) {
 			}
 
 			// 验证接口
-			if !isValidInterface(req.Interface) {
+			if !config.IsValidInterface(req.Interface) {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
@@ -158,7 +149,7 @@ func SetupRoutes(r *gin.Engine) {
 			}
 
 			// 验证接口
-			if !isValidInterface(req.Interface) {
+			if !config.IsValidInterface(req.Interface) {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
@@ -196,7 +187,7 @@ func SetupRoutes(r *gin.Engine) {
 			}
 
 			// 验证接口
-			if !isValidInterface(ifName) {
+			if !config.IsValidInterface(ifName) {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces),
@@ -299,7 +290,7 @@ func SetupRoutes(r *gin.Engine) {
 			}
 
 			// 验证接口
-			if !isValidInterface(req.Interface) {
+			if !config.IsValidInterface(req.Interface) {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
 					Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
@@ -358,7 +349,7 @@ func SetupRoutes(r *gin.Engine) {
 
 			if ifName != "" {
 				// 验证接口
-				if !isValidInterface(ifName) {
+				if !config.IsValidInterface(ifName) {
 					c.JSON(http.StatusBadRequest, define.ApiResponse{
 						Status: "error",
 						Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces),

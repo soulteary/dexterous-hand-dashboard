@@ -35,7 +35,7 @@ func StartWaveAnimation(ifName string, speed int, handType string, handId uint32
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		log.Printf("❌ 无法启动波浪动画: 无效的接口 %s", ifName)
 		return
 	}
@@ -150,7 +150,7 @@ func StartSwayAnimation(ifName string, speed int, handType string, handId uint32
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		log.Printf("❌ 无法启动摆动动画: 无效的接口 %s", ifName)
 		return
 	}
@@ -238,7 +238,7 @@ func StopAllAnimations(ifName string) {
 	}
 
 	// 验证接口
-	if !IsValidInterface(ifName) {
+	if !config.IsValidInterface(ifName) {
 		log.Printf("⚠️ 尝试停止无效接口的动画: %s", ifName)
 		return
 	}
