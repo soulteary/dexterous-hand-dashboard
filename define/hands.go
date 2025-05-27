@@ -1,4 +1,8 @@
 package define
 
-const HAND_TYPE_LEFT = 0x28
-const HAND_TYPE_RIGHT = 0x27
+type HandType int
+
+const (
+	HAND_TYPE_LEFT  HandType = 0x28
+	HAND_TYPE_RIGHT HandType = 0x27
+)
