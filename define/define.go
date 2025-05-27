@@ -10,8 +10,8 @@ type Config struct {
 
 // API 响应结构体
 type ApiResponse struct {
-	Status  string      `json:"status"`
-	Message string      `json:"message,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
+	Data    any    `json:"data,omitempty"`
 }
