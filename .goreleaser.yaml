@@ -1,0 +1,115 @@
+version: 2
+
+project_name: dashboard-server
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: dashboard-server
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - "6"
+      - "7"
+    ldflags:
+      - -s -w
+
+archives:
+  - formats: ["tar.gz"]
+    files:
+      - static
+      - README.md
+      - README_CN.md
+      - LICENSE
+
+release:
+  draft: false
+
+dockers:
+  - image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-amd64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: amd64
+    extra_files:
+      - static
+
+  - image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm64
+    extra_files:
+      - static
+
+  - image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv6"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm/v6"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm
+    goarm: "6"
+    extra_files:
+      - static
+
+  - image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv7"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm/v7"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm
+    goarm: "7"
+    extra_files:
+      - static
+
+docker_manifests:
+  - name_template: "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-amd64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-arm64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv6"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv7"
+  - name_template: "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:latest"
+    image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-amd64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-arm64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv6"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv7"
+  - name_template: "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:v{{ .Major }}"
+    image_templates:
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-amd64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-arm64"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv6"
+      - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv7"

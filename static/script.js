@@ -53,7 +53,7 @@ const LinkerHandController = {
         PALM_BIG_OPEN: [128, 128, 128, 128],      // 大张开掌部
 
         YEAH: [0, 103, 255, 255, 0, 0],          // Yeah!
-        PALM_YEAH: [255, 235, 128, 128],         // Yeah!掌部
+        PALM_YEAH: [255, 235, 128, 128],         // Yeah! 掌部
 
         // 数字手势预设
         ONE: [0, 57, 255, 0, 0, 0],
@@ -199,7 +199,7 @@ const LinkerHandController = {
             return;
         }
 
-        logMessage('info', `发送掌部姿态到 ${enabledHands.length} 个启用的手部: [${pose.join(', ')}]`);
+        logMessage('info', `发送掌部姿态到 ${enabledHands.length} 个启用的手部：[${pose.join(', ')}]`);
 
         enabledHands.forEach(async (config) => {
             await sendPalmPoseToHand(config, pose);
@@ -214,7 +214,7 @@ const LinkerHandController = {
         // 设置定时获取
         setInterval(() => {
             this.fetchSensorData();
-        }, 2000); // 每2秒更新一次
+        }, 2000); // 每 2 秒更新一次
     },
 
     // 获取传感器数据
@@ -227,7 +227,7 @@ const LinkerHandController = {
                 }
             })
             .catch(error => {
-                console.error('获取传感器数据失败:', error);
+                console.error('获取传感器数据失败：', error);
             });
     },
 
@@ -250,7 +250,7 @@ const LinkerHandController = {
 
         // 更新最后更新时间
         const lastUpdate = new Date(data.lastUpdate).toLocaleTimeString();
-        html += `<div style="text-align:right;font-size:0.8em;margin-top:5px;">最后更新: ${lastUpdate}</div>`;
+        html += `<div style="text-align:right;font-size:0.8em;margin-top:5px;">最后更新：${lastUpdate}</div>`;
 
         sensorDisplay.innerHTML = html;
     },
@@ -281,7 +281,7 @@ async function initializeSystem() {
     try {
         logMessage('info', '开始初始化系统...');
         
-        // 步骤1: 加载可用接口
+        // 步骤 1: 加载可用接口
         logMessage('info', '步骤 1/3: 加载可用接口');
         await loadAvailableInterfaces();
         
@@ -290,7 +290,7 @@ async function initializeSystem() {
             throw new Error('未能获取到任何可用接口');
         }
         
-        // 步骤2: 生成手部配置
+        // 步骤 2: 生成手部配置
         logMessage('info', '步骤 2/3: 生成手部配置');
         generateHandConfigs();
         
@@ -299,14 +299,14 @@ async function initializeSystem() {
             throw new Error('未能生成手部配置');
         }
         
-        // 步骤3: 检查接口状态
+        // 步骤 3: 检查接口状态
         logMessage('info', '步骤 3/3: 检查接口状态');
         await checkAllInterfaceStatus();
         
         logMessage('success', '系统初始化完成');
         
     } catch (error) {
-        logMessage('error', `系统初始化失败: ${error.message}`);
+        logMessage('error', `系统初始化失败：${error.message}`);
         console.error('InitializeSystem Error:', error);
         
         // 尝试使用默认配置恢复
@@ -332,13 +332,13 @@ async function loadAvailableInterfaces() {
         if (data.status === 'success') {
             availableInterfaces = data.data.availableInterfaces || [];
             
-            logMessage('success', `获取到 ${availableInterfaces.length} 个可用接口: ${availableInterfaces.join(', ')}`);
+            logMessage('success', `获取到 ${availableInterfaces.length} 个可用接口：${availableInterfaces.join(', ')}`);
             hideConnectionWarning();
         } else {
             throw new Error(data.error || '获取接口失败');
         }
     } catch (error) {
-        logMessage('error', `获取接口失败: ${error.message}`);
+        logMessage('error', `获取接口失败：${error.message}`);
         showConnectionWarning();
         // 设置默认值
         availableInterfaces = ['can0', 'can1', 'vcan0', 'vcan1'];
@@ -358,7 +358,7 @@ function generateHandConfigs() {
     handsGrid.innerHTML = '';
 
     if (!availableInterfaces || availableInterfaces.length === 0) {
-        handsGrid.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">没有可用的CAN接口</div>';
+        handsGrid.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">没有可用的 CAN 接口</div>';
         logMessage('warning', '没有可用接口，无法生成手部配置');
         return;
     }
@@ -402,7 +402,7 @@ function generateHandConfigs() {
     }, 100);
 }
 
-// 添加一个安全的DOM检查函数
+// 添加一个安全的 DOM 检查函数
 function validateHandElement(handId) {
     const element = document.getElementById(handId);
     if (!element) {
@@ -444,7 +444,7 @@ function safeUpdateHandElement(handId) {
         }
     } catch (error) {
         console.error(`Error updating hand element ${handId}:`, error);
-        logMessage('error', `更新手部元素 ${handId} 时出错: ${error.message}`);
+        logMessage('error', `更新手部元素 ${handId} 时出错：${error.message}`);
     }
 }
 
@@ -458,7 +458,7 @@ function createHandElement(config) {
     const handLabel = config.handType === 'left' ? '左手' : '右手';
     const handId = handTypeIds[config.handType];
 
-    // 确保HTML结构完整且正确
+    // 确保 HTML 结构完整且正确
     div.innerHTML = `
         <div class="hand-header">
             <input type="checkbox" class="hand-checkbox" id="${config.id}_checkbox" ${config.enabled ? 'checked' : ''}>
@@ -487,7 +487,7 @@ function createHandElement(config) {
         </div>
     `;
 
-    // 使用 requestAnimationFrame 确保DOM完全渲染后再设置事件监听器
+    // 使用 requestAnimationFrame 确保 DOM 完全渲染后再设置事件监听器
     requestAnimationFrame(() => {
         setTimeout(() => {
             setupHandEventListeners(config.id);
@@ -506,17 +506,17 @@ function setupHandEventListeners(handId) {
 
     // 检查所有必需的元素是否存在
     if (!checkbox) {
-        console.error(`setupHandEventListeners: 找不到checkbox - ${handId}_checkbox`);
+        console.error(`setupHandEventListeners: 找不到 checkbox - ${handId}_checkbox`);
         return;
     }
     
     if (!interfaceSelect) {
-        console.error(`setupHandEventListeners: 找不到interfaceSelect - ${handId}_interface`);
+        console.error(`setupHandEventListeners: 找不到 interfaceSelect - ${handId}_interface`);
         return;
     }
     
     if (!handTypeSelect) {
-        console.error(`setupHandEventListeners: 找不到handTypeSelect - ${handId}_handtype`);
+        console.error(`setupHandEventListeners: 找不到 handTypeSelect - ${handId}_handtype`);
         return;
     }
 
@@ -588,7 +588,7 @@ function updateHandElement(handId) {
     // 安全地更新手型标签
     const handTypeLabels = element.querySelectorAll('.control-label');
     if (handTypeLabels.length >= 2) {
-        const handTypeLabel = handTypeLabels[1]; // 第二个label是手型的
+        const handTypeLabel = handTypeLabels[1]; // 第二个 label 是手型的
         if (handTypeLabel) {
             handTypeLabel.textContent = `手型 (CAN ID: 0x${handIdHex.toString(16).toUpperCase()})`;
         }
@@ -654,7 +654,7 @@ async function checkAllInterfaceStatus() {
         hideConnectionWarning();
         
     } catch (error) {
-        logMessage('error', `状态检查失败: ${error.message}`);
+        logMessage('error', `状态检查失败：${error.message}`);
         console.error('CheckAllInterfaceStatus Error:', error);
         showConnectionWarning();
         setAllHandStatusOffline();
@@ -739,7 +739,7 @@ function setupEventListeners() {
     document.getElementById('start-sway').addEventListener('click', () => startAnimationForAll('sway'));
     document.getElementById('stop-animation').addEventListener('click', stopAllAnimations);
 
-    // 预设姿势按钮 - 使用LinkerHandController的预设
+    // 预设姿势按钮 - 使用 LinkerHandController 的预设
     setupPresetButtons();
 
     // 数字手势按钮事件
@@ -797,7 +797,7 @@ function setupPresetButtons() {
 function setupNumericPresets() {
     const delayDefault = 30;
 
-    // 数字1-9的预设
+    // 数字 1-9 的预设
     for (let i = 1; i <= 9; i++) {
         const button = document.getElementById(`pose-${i}`);
         if (button) {
@@ -829,7 +829,7 @@ function getNumberName(num) {
     return names[num] || '';
 }
 
-// 设置Refill Core功能
+// 设置 Refill Core 功能
 function setupRefillCore() {
     document.getElementById("refill-core").addEventListener("click", () => {
         event.preventDefault();
@@ -844,32 +844,32 @@ function setupRefillCore() {
             [[246, 155, 154, 25], [140, 62, 0, 15, 29, 143]], // 小指
         ];
 
-        const delayTime = 350; // 设定延迟时间为350ms
+        const delayTime = 350; // 设定延迟时间为 350ms
         
         // 创建完整的序列：从第一个到最后一个，再从最后一个回到第二个
         const forwardIndices = [...Array(rukaPoseList.length).keys()]; // [0,1,2,3]
         const backwardIndices = [...forwardIndices].reverse().slice(1); // [3,2,1]
         const sequenceIndices = [...forwardIndices, ...backwardIndices];
         
-        // 遍历序列索引，为每个索引创建两个操作（palm和finger）
+        // 遍历序列索引，为每个索引创建两个操作（palm 和 finger）
         sequenceIndices.forEach((index, step) => {
             const targetPose = rukaPoseList[index];
             
-            // 应用palm预设
+            // 应用 palm 预设
             setTimeout(() => {
                 console.log(`Step ${step+1}a: Applying palm preset for pose ${index+1}`);
                 LinkerHandController.applyPalmPreset(targetPose[0]);
                 const palmPose = LinkerHandController.getPalmPoseValues();
                 LinkerHandController.sendPalmPoseToAll(palmPose);
-            }, delayTime * (step * 2)); // 每个完整步骤有两个操作，所以是step*2
+            }, delayTime * (step * 2)); // 每个完整步骤有两个操作，所以是 step*2
             
-            // 应用finger预设
+            // 应用 finger 预设
             setTimeout(() => {
                 console.log(`Step ${step+1}b: Applying finger preset for pose ${index+1}`);
                 LinkerHandController.applyFingerPreset(targetPose[1]);
                 const fingerPose = LinkerHandController.getFingerPoseValues();
                 LinkerHandController.sendFingerPoseToAll(fingerPose);
-            }, delayTime * (step * 2 + 1)); // 偏移一个delayTime
+            }, delayTime * (step * 2 + 1)); // 偏移一个 delayTime
         });
     });
 }
@@ -1196,7 +1196,7 @@ function logMessage(type, message) {
     statusLog.appendChild(logEntry);
     statusLog.scrollTop = statusLog.scrollHeight;
 
-    // 保持最多50条日志
+    // 保持最多 50 条日志
     const entries = statusLog.querySelectorAll('.log-entry');
     if (entries.length > 50) {
         statusLog.removeChild(entries[0]);
@@ -1205,12 +1205,12 @@ function logMessage(type, message) {
 
 // 启动状态更新器
 function startStatusUpdater() {
-    // 每5秒检查一次接口状态
+    // 每 5 秒检查一次接口状态
     setInterval(async () => {
         await checkAllInterfaceStatus();
     }, 5000);
 
-    // 每30秒刷新一次接口列表
+    // 每 30 秒刷新一次接口列表
     setInterval(async () => {
         const oldInterfaces = [...availableInterfaces];
         await loadAvailableInterfaces();
@@ -1226,7 +1226,7 @@ function startStatusUpdater() {
 async function debugSystemStatus() {
     logMessage('info', '🔍 开始系统调试...');
     
-    // 检查HTML元素
+    // 检查 HTML 元素
     const elements = {
         'hands-grid': document.getElementById('hands-grid'),
         'status-log': document.getElementById('status-log'),
@@ -1243,11 +1243,11 @@ async function debugSystemStatus() {
     });
     
     // 检查全局变量
-    logMessage('info', `可用接口: [${availableInterfaces.join(', ')}]`);
-    logMessage('info', `手部配置数量: ${Object.keys(handConfigs).length}`);
-    logMessage('info', `启用手部数量: ${getEnabledHands().length}`);
+    logMessage('info', `可用接口：[${availableInterfaces.join(', ')}]`);
+    logMessage('info', `手部配置数量：${Object.keys(handConfigs).length}`);
+    logMessage('info', `启用手部数量：${getEnabledHands().length}`);
     
-    // 测试API连通性
+    // 测试 API 连通性
     try {
         logMessage('info', '测试 /api/health 连接...');
         const response = await fetch('/api/health');
@@ -1256,40 +1256,40 @@ async function debugSystemStatus() {
             logMessage('success', '✅ 健康检查通过');
             console.log('Health Check Data:', data);
         } else {
-            logMessage('error', `❌ 健康检查失败: HTTP ${response.status}`);
+            logMessage('error', `❌ 健康检查失败：HTTP ${response.status}`);
         }
     } catch (error) {
-        logMessage('error', `❌ 健康检查异常: ${error.message}`);
+        logMessage('error', `❌ 健康检查异常：${error.message}`);
     }
     
-    // 测试接口API
+    // 测试接口 API
     try {
         logMessage('info', '测试 /api/interfaces 连接...');
         const response = await fetch('/api/interfaces');
         if (response.ok) {
             const data = await response.json();
-            logMessage('success', '✅ 接口API通过');
+            logMessage('success', '✅ 接口 API 通过');
             console.log('Interfaces API Data:', data);
         } else {
-            logMessage('error', `❌ 接口API失败: HTTP ${response.status}`);
+            logMessage('error', `❌ 接口 API 失败：HTTP ${response.status}`);
         }
     } catch (error) {
-        logMessage('error', `❌ 接口API异常: ${error.message}`);
+        logMessage('error', `❌ 接口 API 异常：${error.message}`);
     }
 }
 
-// 导出全局函数供HTML按钮使用
+// 导出全局函数供 HTML 按钮使用
 window.triggerButtonsSequentially = triggerButtonsSequentially;
 window.debugSystemStatus = debugSystemStatus;
 
 // 添加全局错误处理
 window.addEventListener('error', function(event) {
-    logMessage('error', `全局错误: ${event.error?.message || event.message}`);
+    logMessage('error', `全局错误：${event.error?.message || event.message}`);
     console.error('Global Error:', event.error);
 });
 
 window.addEventListener('unhandledrejection', function(event) {
-    logMessage('error', `未处理的Promise拒绝: ${event.reason?.message || event.reason}`);
+    logMessage('error', `未处理的 Promise 拒绝：${event.reason?.message || event.reason}`);
     console.error('Unhandled Promise Rejection:', event.reason);
 });
 
@@ -1333,7 +1333,7 @@ document.addEventListener('keydown', function(e) {
         toggleAllHands();
     }
     
-    // 数字键1-9快速设置预设姿势
+    // 数字键 1-9 快速设置预设姿势
     if (e.key >= '1' && e.key <= '9' && !e.ctrlKey && !e.altKey) {
         const activeElement = document.activeElement;
         // 确保不在输入框中
@@ -1373,7 +1373,7 @@ function addTooltips() {
         'start-wave': '启动所有启用手部的手指波浪动画',
         'start-sway': '启动所有启用手部的掌部摆动动画',
         'stop-animation': '停止所有启用手部的动画',
-        'refill-core': '执行Refill Core动作序列'
+        'refill-core': '执行 Refill Core 动作序列'
     };
 
     Object.entries(tooltips).forEach(([id, text]) => {
@@ -1411,8 +1411,8 @@ async function startSequentialHandAnimation(animationType = 'wave', interval = 5
         return getInterfaceNumber(a.interface) - getInterfaceNumber(b.interface);
     });
     
-    logMessage('info', `开始六手依次动画 - 类型: ${animationType}, 间隔: ${interval}ms, 循环: ${cycles}次`);
-    logMessage('info', `动画顺序: ${sortedHands.map(h => h.interface).join(' → ')}`);
+    logMessage('info', `开始六手依次动画 - 类型：${animationType}, 间隔：${interval}ms, 循环：${cycles}次`);
+    logMessage('info', `动画顺序：${sortedHands.map(h => h.interface).join(' → ')}`);
     
     // 定义动画预设
     const animationPresets = {
@@ -1466,12 +1466,12 @@ async function startSequentialHandAnimation(animationType = 'wave', interval = 5
                 [64, 64, 64, 64, 64, 64],       // 握拳 (0)
             ],
             palmPoses: [
-                [255, 109, 255, 118], // 5对应的掌部
-                [255, 109, 255, 118], // 4对应的掌部
-                [255, 109, 255, 118], // 3对应的掌部
-                [255, 109, 255, 118], // 2对应的掌部
-                [255, 109, 255, 118], // 1对应的掌部
-                [128, 128, 128, 128], // 0对应的掌部
+                [255, 109, 255, 118], // 5 对应的掌部
+                [255, 109, 255, 118], // 4 对应的掌部
+                [255, 109, 255, 118], // 3 对应的掌部
+                [255, 109, 255, 118], // 2 对应的掌部
+                [255, 109, 255, 118], // 1 对应的掌部
+                [128, 128, 128, 128], // 0 对应的掌部
             ]
         },
         
@@ -1480,7 +1480,7 @@ async function startSequentialHandAnimation(animationType = 'wave', interval = 5
             fingerPoses: [
                 [64, 64, 64, 64, 64, 64],       // 起始握拳
                 [128, 64, 64, 64, 64, 64],      // 拇指起
-                [255, 128, 64, 64, 64, 64],     // 拇指+食指起
+                [255, 128, 64, 64, 64, 64],     // 拇指 + 食指起
                 [255, 255, 128, 64, 64, 64],    // 前三指起
                 [255, 255, 255, 128, 64, 64],   // 前四指起
                 [255, 255, 255, 255, 128, 64],  // 前五指起
@@ -1582,10 +1582,10 @@ async function startCustomSequentialAnimation(config) {
         sortedHands = sortedHands.reverse();
     }
     
-    logMessage('info', `开始自定义六手动画 - 方向: ${direction}, 同时手数: ${simultaneousHands}`);
+    logMessage('info', `开始自定义六手动画 - 方向：${direction}, 同时手数：${simultaneousHands}`);
     
     // 执行动画逻辑...
-    // 这里可以根据simultaneousHands参数同时控制多只手
+    // 这里可以根据 simultaneousHands 参数同时控制多只手
     // 实现类似的动画逻辑，但支持更多自定义选项
 }
 

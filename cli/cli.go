@@ -19,7 +19,7 @@ func ParseConfig() *define.Config {
 	flag.StringVar(&cfg.CanServiceURL, "can-url", "http://127.0.0.1:5260", "CAN 服务的 URL")
 	flag.StringVar(&cfg.WebPort, "port", "9099", "Web 服务的端口")
 	flag.StringVar(&cfg.DefaultInterface, "interface", "", "默认 CAN 接口")
-	flag.StringVar(&canInterfacesFlag, "can-interfaces", "", "支持的 CAN 接口列表，用逗号分隔 (例如: can0,can1,vcan0)")
+	flag.StringVar(&canInterfacesFlag, "can-interfaces", "", "支持的 CAN 接口列表，用逗号分隔 (例如：can0,can1,vcan0)")
 	flag.Parse()
 
 	// 环境变量覆盖命令行参数
@@ -45,7 +45,7 @@ func ParseConfig() *define.Config {
 		}
 	}
 
-	// 如果没有指定可用接口，从CAN服务获取
+	// 如果没有指定可用接口，从 CAN 服务获取
 	if len(cfg.AvailableInterfaces) == 0 {
 		log.Println("🔍 未指定可用接口，将从 CAN 服务获取...")
 		cfg.AvailableInterfaces = getAvailableInterfacesFromCanService(cfg.CanServiceURL)
@@ -59,7 +59,7 @@ func ParseConfig() *define.Config {
 	return cfg
 }
 
-// 从CAN服务获取可用接口
+// 从 CAN 服务获取可用接口
 func getAvailableInterfacesFromCanService(canServiceURL string) []string {
 	resp, err := http.Get(canServiceURL + "/api/interfaces")
 	if err != nil {
