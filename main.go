@@ -7,7 +7,7 @@ import (
 	"hands/cli"
 	"hands/define"
 	"log"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"strings"
@@ -25,26 +25,26 @@ const HAND_TYPE_RIGHT = 0x27
 type FingerPoseRequest struct {
 	Interface string `json:"interface,omitempty"`
 	Pose      []byte `json:"pose" binding:"required,len=6"`
-	HandType  string `json:"handType,omitempty"` // 新增: 手型类型
-	HandId    uint32 `json:"handId,omitempty"`   // 新增: CAN ID
+	HandType  string `json:"handType,omitempty"` // 新增：手型类型
+	HandId    uint32 `json:"handId,omitempty"`   // 新增：CAN ID
 }
 
 type PalmPoseRequest struct {
 	Interface string `json:"interface,omitempty"`
 	Pose      []byte `json:"pose" binding:"required,len=4"`
-	HandType  string `json:"handType,omitempty"` // 新增: 手型类型
-	HandId    uint32 `json:"handId,omitempty"`   // 新增: CAN ID
+	HandType  string `json:"handType,omitempty"` // 新增：手型类型
+	HandId    uint32 `json:"handId,omitempty"`   // 新增：CAN ID
 }
 
 type AnimationRequest struct {
 	Interface string `json:"interface,omitempty"`
 	Type      string `json:"type" binding:"required,oneof=wave sway stop"`
 	Speed     int    `json:"speed" binding:"min=0,max=2000"`
-	HandType  string `json:"handType,omitempty"` // 新增: 手型类型
-	HandId    uint32 `json:"handId,omitempty"`   // 新增: CAN ID
+	HandType  string `json:"handType,omitempty"` // 新增：手型类型
+	HandId    uint32 `json:"handId,omitempty"`   // 新增：CAN ID
 }
 
-// 新增: 手型设置请求
+// 新增：手型设置请求
 type HandTypeRequest struct {
 	Interface string `json:"interface" binding:"required"`
 	HandType  string `json:"handType" binding:"required,oneof=left right"`
@@ -142,12 +142,12 @@ func setHandConfig(ifName, handType string, handId uint32) {
 
 // 解析手型参数
 func parseHandType(handType string, handId uint32, ifName string) uint32 {
-	// 如果提供了有效的handId，直接使用
+	// 如果提供了有效的 handId，直接使用
 	if handId != 0 {
 		return handId
 	}
 
-	// 根据handType字符串确定ID
+	// 根据 handType 字符串确定 ID
 	switch strings.ToLower(handType) {
 	case "left":
 		return HAND_TYPE_LEFT
@@ -162,7 +162,7 @@ func parseHandType(handType string, handId uint32, ifName string) uint32 {
 
 // 初始化服务
 func initService() {
-	log.Printf("🔧 服务配置:")
+	log.Printf("🔧 服务配置：")
 	log.Printf("   - CAN 服务 URL: %s", config.CanServiceURL)
 	log.Printf("   - Web 端口: %s", config.WebPort)
 	log.Printf("   - 可用接口: %v", config.AvailableInterfaces)
@@ -213,7 +213,7 @@ func sendToCanService(msg CanMessage) error {
 	if resp.StatusCode != http.StatusOK {
 		var errResp define.ApiResponse
 		if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
-			return fmt.Errorf("CAN 服务返回错误: HTTP %d", resp.StatusCode)
+			return fmt.Errorf("CAN 服务返回错误：HTTP %d", resp.StatusCode)
 		}
 		return fmt.Errorf("CAN 服务返回错误: %s", errResp.Error)
 	}
@@ -237,7 +237,7 @@ func sendFingerPose(ifName string, pose []byte, handType string, handId uint32) 
 		return fmt.Errorf("无效的接口 %s，可用接口: %v", ifName, config.AvailableInterfaces)
 	}
 
-	// 解析手型ID
+	// 解析手型 ID
 	canId := parseHandType(handType, handId, ifName)
 
 	// 添加随机扰动
@@ -249,7 +249,7 @@ func sendFingerPose(ifName string, pose []byte, handType string, handId uint32) 
 	// 构造 CAN 消息
 	msg := CanMessage{
 		Interface: ifName,
-		ID:        canId, // 使用动态的手型ID
+		ID:        canId, // 使用动态的手型 ID
 		Data:      append([]byte{0x01}, perturbedPose...),
 	}
 
@@ -285,7 +285,7 @@ func sendPalmPose(ifName string, pose []byte, handType string, handId uint32) er
 		return fmt.Errorf("无效的接口 %s，可用接口: %v", ifName, config.AvailableInterfaces)
 	}
 
-	// 解析手型ID
+	// 解析手型 ID
 	canId := parseHandType(handType, handId, ifName)
 
 	// 添加随机扰动
@@ -297,7 +297,7 @@ func sendPalmPose(ifName string, pose []byte, handType string, handId uint32) er
 	// 构造 CAN 消息
 	msg := CanMessage{
 		Interface: ifName,
-		ID:        canId, // 使用动态的手型ID
+		ID:        canId, // 使用动态的手型 ID
 		Data:      append([]byte{0x04}, perturbedPose...),
 	}
 
@@ -326,7 +326,7 @@ func sendPalmPose(ifName string, pose []byte, handType string, handId uint32) er
 
 // 在 base 基础上进行 ±delta 的扰动，范围限制在 [0, 255]
 func perturb(base byte, delta int) byte {
-	offset := rand.Intn(2*delta+1) - delta
+	offset := rand.IntN(2*delta+1) - delta
 	v := int(base) + offset
 	if v < 0 {
 		v = 0
@@ -622,11 +622,11 @@ func readSensorData() {
 			// 为每个接口模拟压力数据 (0-100)
 			for _, ifName := range config.AvailableInterfaces {
 				if sensorData, exists := sensorDataMap[ifName]; exists {
-					sensorData.Thumb = rand.Intn(101)
-					sensorData.Index = rand.Intn(101)
-					sensorData.Middle = rand.Intn(101)
-					sensorData.Ring = rand.Intn(101)
-					sensorData.Pinky = rand.Intn(101)
+					sensorData.Thumb = rand.IntN(101)
+					sensorData.Index = rand.IntN(101)
+					sensorData.Middle = rand.IntN(101)
+					sensorData.Ring = rand.IntN(101)
+					sensorData.Pinky = rand.IntN(101)
 					sensorData.LastUpdate = time.Now()
 				}
 			}
@@ -651,7 +651,7 @@ func checkCanServiceStatus() map[string]bool {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("❌ CAN 服务返回非正常状态: %d", resp.StatusCode)
+		log.Printf("❌ CAN 服务返回非正常状态：%d", resp.StatusCode)
 		result := make(map[string]bool)
 		for _, ifName := range config.AvailableInterfaces {
 			result[ifName] = false
@@ -704,7 +704,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
-					Error:  "无效的手型设置请求: " + err.Error(),
+					Error:  "无效的手型设置请求：" + err.Error(),
 				})
 				return
 			}
@@ -718,7 +718,7 @@ func setupRoutes(r *gin.Engine) {
 				return
 			}
 
-			// 验证手型ID
+			// 验证手型 ID
 			if req.HandType == "left" && req.HandId != HAND_TYPE_LEFT {
 				req.HandId = HAND_TYPE_LEFT
 			} else if req.HandType == "right" && req.HandId != HAND_TYPE_RIGHT {
@@ -750,7 +750,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
-					Error:  "无效的手指姿态数据: " + err.Error(),
+					Error:  "无效的手指姿态数据：" + err.Error(),
 				})
 				return
 			}
@@ -785,7 +785,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := sendFingerPose(req.Interface, req.Pose, req.HandType, req.HandId); err != nil {
 				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
-					Error:  "发送手指姿态失败: " + err.Error(),
+					Error:  "发送手指姿态失败：" + err.Error(),
 				})
 				return
 			}
@@ -803,7 +803,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
-					Error:  "无效的掌部姿态数据: " + err.Error(),
+					Error:  "无效的掌部姿态数据：" + err.Error(),
 				})
 				return
 			}
@@ -838,7 +838,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := sendPalmPose(req.Interface, req.Pose, req.HandType, req.HandId); err != nil {
 				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
-					Error:  "发送掌部姿态失败: " + err.Error(),
+					Error:  "发送掌部姿态失败：" + err.Error(),
 				})
 				return
 			}
@@ -895,31 +895,31 @@ func setupRoutes(r *gin.Engine) {
 			// 数字手势
 			case "1":
 				fingerPose = []byte{192, 64, 192, 192, 192, 64}
-				message = "已设置数字1手势"
+				message = "已设置数字 1 手势"
 			case "2":
 				fingerPose = []byte{192, 64, 64, 192, 192, 64}
-				message = "已设置数字2手势"
+				message = "已设置数字 2 手势"
 			case "3":
 				fingerPose = []byte{192, 64, 64, 64, 192, 64}
-				message = "已设置数字3手势"
+				message = "已设置数字 3 手势"
 			case "4":
 				fingerPose = []byte{192, 64, 64, 64, 64, 64}
-				message = "已设置数字4手势"
+				message = "已设置数字 4 手势"
 			case "5":
 				fingerPose = []byte{192, 192, 192, 192, 192, 192}
-				message = "已设置数字5手势"
+				message = "已设置数字 5 手势"
 			case "6":
 				fingerPose = []byte{64, 192, 192, 192, 192, 64}
-				message = "已设置数字6手势"
+				message = "已设置数字 6 手势"
 			case "7":
 				fingerPose = []byte{64, 64, 192, 192, 192, 64}
-				message = "已设置数字7手势"
+				message = "已设置数字 7 手势"
 			case "8":
 				fingerPose = []byte{64, 64, 64, 192, 192, 64}
-				message = "已设置数字8手势"
+				message = "已设置数字 8 手势"
 			case "9":
 				fingerPose = []byte{64, 64, 64, 64, 192, 64}
-				message = "已设置数字9手势"
+				message = "已设置数字 9 手势"
 			default:
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
@@ -928,7 +928,7 @@ func setupRoutes(r *gin.Engine) {
 				return
 			}
 
-			// 解析手型ID（从查询参数或使用接口配置）
+			// 解析手型 ID（从查询参数或使用接口配置）
 			handId := uint32(0)
 			if handType != "" {
 				handId = parseHandType(handType, 0, ifName)
@@ -937,7 +937,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := sendFingerPose(ifName, fingerPose, handType, handId); err != nil {
 				c.JSON(http.StatusInternalServerError, define.ApiResponse{
 					Status: "error",
-					Error:  "设置预设姿势失败: " + err.Error(),
+					Error:  "设置预设姿势失败：" + err.Error(),
 				})
 				return
 			}
@@ -955,7 +955,7 @@ func setupRoutes(r *gin.Engine) {
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, define.ApiResponse{
 					Status: "error",
-					Error:  "无效的动画请求: " + err.Error(),
+					Error:  "无效的动画请求：" + err.Error(),
 				})
 				return
 			}
@@ -1207,9 +1207,6 @@ func main() {
 	serverStartTime = time.Now()
 
 	log.Printf("🚀 启动 CAN 控制服务 (支持左右手配置)")
-
-	// 初始化随机数种子
-	rand.Seed(time.Now().UnixNano())
 
 	// 初始化服务
 	initService()
