@@ -32,10 +32,10 @@ func HandleHandType(c *gin.Context) {
 	}
 
 	// 验证手型 ID
-	if req.HandType == "left" && req.HandId != define.HAND_TYPE_LEFT {
-		req.HandId = define.HAND_TYPE_LEFT
-	} else if req.HandType == "right" && req.HandId != define.HAND_TYPE_RIGHT {
-		req.HandId = define.HAND_TYPE_RIGHT
+	if req.HandType == "left" && req.HandId != uint32(define.HAND_TYPE_LEFT) {
+		req.HandId = uint32(define.HAND_TYPE_LEFT)
+	} else if req.HandType == "right" && req.HandId != uint32(define.HAND_TYPE_RIGHT) {
+		req.HandId = uint32(define.HAND_TYPE_RIGHT)
 	}
 
 	// 设置手型配置

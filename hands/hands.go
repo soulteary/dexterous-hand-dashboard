@@ -64,7 +64,7 @@ func GetHandConfig(ifName string) *HandConfig {
 	// 创建默认配置（右手）
 	HandConfigs[ifName] = &HandConfig{
 		HandType: "right",
-		HandId:   define.HAND_TYPE_RIGHT,
+		HandId:   uint32(define.HAND_TYPE_RIGHT),
 	}
 
 	log.Printf("🆕 为接口 %s 创建默认手型配置: 右手 (0x%X)", ifName, define.HAND_TYPE_RIGHT)
@@ -81,9 +81,9 @@ func ParseHandType(handType string, handId uint32, ifName string) uint32 {
 	// 根据 handType 字符串确定 ID
 	switch strings.ToLower(handType) {
 	case "left":
-		return define.HAND_TYPE_LEFT
+		return uint32(define.HAND_TYPE_LEFT)
 	case "right":
-		return define.HAND_TYPE_RIGHT
+		return uint32(define.HAND_TYPE_RIGHT)
 	default:
 		// 使用接口的配置
 		handConfig := GetHandConfig(ifName)
@@ -126,7 +126,7 @@ func SendFingerPose(ifName string, pose []byte, handType string, handId uint32) 
 	err := sendToCanService(msg)
 	if err == nil {
 		handTypeName := "右手"
-		if canId == define.HAND_TYPE_LEFT {
+		if canId == uint32(define.HAND_TYPE_LEFT) {
 			handTypeName = "左手"
 		}
 		log.Printf("✅ %s (%s, 0x%X) 手指动作已发送: [%X %X %X %X %X %X]",
@@ -187,7 +187,7 @@ func SendPalmPose(ifName string, pose []byte, handType string, handId uint32) er
 	err := sendToCanService(msg)
 	if err == nil {
 		handTypeName := "右手"
-		if canId == define.HAND_TYPE_LEFT {
+		if canId == uint32(define.HAND_TYPE_LEFT) {
 			handTypeName = "左手"
 		}
 		log.Printf("✅ %s (%s, 0x%X) 掌部姿态已发送: [%X %X %X %X]",
