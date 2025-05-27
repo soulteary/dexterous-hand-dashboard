@@ -11,18 +11,6 @@ import (
 	"time"
 )
 
-// 传感器数据结构体
-type SensorData struct {
-	Interface    string    `json:"interface"`
-	Thumb        int       `json:"thumb"`
-	Index        int       `json:"index"`
-	Middle       int       `json:"middle"`
-	Ring         int       `json:"ring"`
-	Pinky        int       `json:"pinky"`
-	PalmPosition []byte    `json:"palmPosition"`
-	LastUpdate   time.Time `json:"lastUpdate"`
-}
-
 // 手型配置结构体
 type HandConfig struct {
 	HandType string `json:"handType"`

@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+// 传感器数据结构体
+type SensorData struct {
+	Interface    string    `json:"interface"`
+	Thumb        int       `json:"thumb"`
+	Index        int       `json:"index"`
+	Middle       int       `json:"middle"`
+	Ring         int       `json:"ring"`
+	Pinky        int       `json:"pinky"`
+	PalmPosition []byte    `json:"palmPosition"`
+	LastUpdate   time.Time `json:"lastUpdate"`
+}
+
 var (
 	SensorDataMap map[string]*SensorData // 每个接口的传感器数据
 	SensorMutex   sync.RWMutex
