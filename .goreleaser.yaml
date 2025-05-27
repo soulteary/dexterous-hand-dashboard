@@ -59,6 +59,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
     goos: linux
     goarch: arm64
+    extra_files:
+      - static
 
   - image_templates:
       - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv6"
@@ -73,6 +75,8 @@ dockers:
     goos: linux
     goarch: arm
     goarm: "6"
+    extra_files:
+      - static
 
   - image_templates:
       - "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}-armv7"
@@ -87,6 +91,8 @@ dockers:
     goos: linux
     goarch: arm
     goarm: "7"
+    extra_files:
+      - static
 
 docker_manifests:
   - name_template: "ghcr.io/{{ .Env.GITHUB_USERNAME }}/dashboard-server:{{ .Tag }}"
