@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// TODO: ID 的作用是什么
 // RawMessage 代表发送给 can-bridge 服务或从其接收的原始消息结构
 type RawMessage struct {
 	Interface string `json:"interface"` // 目标 CAN 接口名，例如 "can0", "vcan1"
