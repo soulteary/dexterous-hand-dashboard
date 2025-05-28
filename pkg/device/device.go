@@ -17,6 +17,10 @@ type Device interface {
 	GetStatus() (DeviceStatus, error)                      // 获取设备状态
 	Connect() error                                        // 连接设备
 	Disconnect() error                                     // 断开设备连接
+
+	// --- 新增 ---
+	PoseExecutor                          // 嵌入 PoseExecutor 接口，Device 需实现它
+	GetAnimationEngine() *AnimationEngine // 获取设备的动画引擎
 }
 
 // Command 代表一个发送给设备的指令
