@@ -2,7 +2,7 @@ package component
 
 import (
 	"fmt"
-	"hands/pkg/device"
+	"hands/device"
 	"math/rand/v2"
 	"time"
 )

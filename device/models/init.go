@@ -1,6 +1,6 @@
 package models
 
-import "hands/pkg/device"
+import "hands/device"
 
 func init() {
 	// 注册 L10 设备类型

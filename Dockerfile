@@ -17,10 +17,10 @@ WORKDIR /app
 
 COPY --link static/ ./static/
 
-COPY --link --from=builder /app/dashboard-server /usr/local/bin/dashboard-server
+COPY --link --from=builder /app/dashboard-server /app/dashboard-server
 
 EXPOSE 9099
 
 ENV SERVER_PORT="9099"
 
-CMD ["dashboard-server"]
+CMD ["/app/dashboard-server"]

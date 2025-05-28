@@ -5,7 +5,6 @@ import (
 	"hands/api"
 	"hands/cli"
 	"hands/config"
-	"hands/hands"
 	"log"
 	"os"
 	"time"
@@ -21,9 +20,6 @@ func initService() {
 	log.Printf("   - Web 端口: %s", config.Config.WebPort)
 	log.Printf("   - 可用接口: %v", config.Config.AvailableInterfaces)
 	log.Printf("   - 默认接口: %s", config.Config.DefaultInterface)
-
-	// 初始化手型配置映射
-	hands.Init()
 
 	log.Println("✅ 控制服务初始化完成")
 }
@@ -81,9 +77,6 @@ func main() {
 
 	// 初始化服务
 	initService()
-
-	// 启动传感器数据模拟
-	hands.ReadSensorData()
 
 	// 设置 Gin 模式
 	gin.SetMode(gin.ReleaseMode)

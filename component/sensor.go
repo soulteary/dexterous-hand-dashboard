@@ -1,7 +1,7 @@
 package component
 
 import (
-	"hands/pkg/device"
+	"hands/device"
 	"time"
 )
 
