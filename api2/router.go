@@ -50,6 +50,10 @@ func (s *Server) SetupRoutes(r *gin.Engine) {
 					poses.POST("/palm", s.handleSetPalmPose)           // 设置手掌姿态
 					poses.POST("/preset/:pose", s.handleSetPresetPose) // 设置预设姿势
 					poses.POST("/reset", s.handleResetPose)            // 重置姿态
+
+					// 新的预设姿势 API
+					poses.GET("/presets", s.GetSupportedPresets)            // 获取支持的预设姿势列表
+					poses.POST("/presets/:presetName", s.ExecutePresetPose) // 执行预设姿势
 				}
 
 				// 动画控制路由
