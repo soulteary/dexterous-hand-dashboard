@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"hands/define"
 	"hands/communication"
 	"hands/component"
+	"hands/define"
 	"hands/device"
 )
 
@@ -40,6 +40,11 @@ func perturb(base byte, delta int) byte {
 }
 
 // NewL10Hand 创建 L10 手部设备实例
+// 参数 config 是设备配置，包含以下字段：
+//   - id: 设备 ID
+//   - can_service_url: CAN 服务 URL
+//   - can_interface: CAN 接口名称，如 "can0"
+//   - hand_type: 手型，可选值为 "left" 或 "right"，默认值为 "right"
 func NewL10Hand(config map[string]any) (device.Device, error) {
 	id, ok := config["id"].(string)
 	if !ok {
