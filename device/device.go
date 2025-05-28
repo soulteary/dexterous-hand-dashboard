@@ -21,6 +21,11 @@ type Device interface {
 	// --- 新增 ---
 	PoseExecutor                          // 嵌入 PoseExecutor 接口，Device 需实现它
 	GetAnimationEngine() *AnimationEngine // 获取设备的动画引擎
+
+	// --- 预设姿势相关方法 ---
+	GetSupportedPresets() []string                 // 获取支持的预设姿势列表
+	ExecutePreset(presetName string) error         // 执行预设姿势
+	GetPresetDescription(presetName string) string // 获取预设姿势描述
 }
 
 // Command 代表一个发送给设备的指令

@@ -24,6 +24,7 @@ type L10Hand struct {
 	mutex           sync.RWMutex
 	canInterface    string                  // CAN 接口名称，如 "can0"
 	animationEngine *device.AnimationEngine // 动画引擎
+	presetManager   *device.PresetManager   // 预设姿势管理器
 }
 
 // 在 base 基础上进行 ±delta 的扰动，范围限制在 [0, 255]
@@ -90,6 +91,14 @@ func NewL10Hand(config map[string]any) (device.Device, error) {
 	// 注册默认动画
 	hand.animationEngine.Register(NewL10WaveAnimation())
 	hand.animationEngine.Register(NewL10SwayAnimation())
+
+	// 初始化预设姿势管理器
+	hand.presetManager = device.NewPresetManager()
+
+	// 注册 L10 的预设姿势
+	for _, preset := range GetL10Presets() {
+		hand.presetManager.RegisterPreset(preset)
+	}
 
 	// 初始化组件
 	if err := hand.initializeComponents(config); err != nil {
@@ -332,4 +341,40 @@ func (h *L10Hand) Disconnect() error {
 	h.status.LastUpdate = time.Now()
 	log.Printf("🔌 设备 %s 已断开", h.id)
 	return nil
+}
+
+// --- 预设姿势相关方法 ---
+
+// GetSupportedPresets 获取支持的预设姿势列表
+func (h *L10Hand) GetSupportedPresets() []string { return h.presetManager.GetSupportedPresets() }
+
+// ExecutePreset 执行预设姿势
+func (h *L10Hand) ExecutePreset(presetName string) error {
+	preset, exists := h.presetManager.GetPreset(presetName)
+	if !exists {
+		return fmt.Errorf("预设姿势 '%s' 不存在", presetName)
+	}
+
+	log.Printf("🎯 设备 %s (%s) 执行预设姿势: %s", h.id, h.GetHandType().String(), presetName)
+
+	// 执行手指姿态
+	if err := h.SetFingerPose(preset.FingerPose); err != nil {
+		return fmt.Errorf("执行预设姿势 '%s' 的手指姿态失败: %w", presetName, err)
+	}
+
+	// 如果有手掌姿态数据，也执行
+	if len(preset.PalmPose) > 0 {
+		time.Sleep(20 * time.Millisecond) // 短暂延时
+		if err := h.SetPalmPose(preset.PalmPose); err != nil {
+			return fmt.Errorf("执行预设姿势 '%s' 的手掌姿态失败: %w", presetName, err)
+		}
+	}
+
+	log.Printf("✅ 设备 %s 预设姿势 '%s' 执行完成", h.id, presetName)
+	return nil
+}
+
+// GetPresetDescription 获取预设姿势描述
+func (h *L10Hand) GetPresetDescription(presetName string) string {
+	return h.presetManager.GetPresetDescription(presetName)
 }
