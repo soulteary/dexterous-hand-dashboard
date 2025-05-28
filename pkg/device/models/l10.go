@@ -40,8 +40,9 @@ func NewL10Hand(config map[string]any) (device.Device, error) {
 		canInterface = "can0" // 默认接口
 	}
 
-	handType, ok := config["hand_type"].(define.HandType)
-	if !ok {
+	handTypeStr, ok := config["hand_type"].(string)
+	handType := define.HAND_TYPE_RIGHT // 默认右手
+	if ok && handTypeStr == "left" {
 		handType = define.HAND_TYPE_LEFT
 	}
 
