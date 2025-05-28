@@ -128,6 +128,25 @@ func (e *AnimationEngine) IsRunning() bool {
 	return e.isRunning
 }
 
+// GetRegisteredAnimations 获取已注册的动画名称列表
+func (e *AnimationEngine) GetRegisteredAnimations() []string {
+	e.registerMutex.RLock()
+	defer e.registerMutex.RUnlock()
+
+	animations := make([]string, 0, len(e.animations))
+	for name := range e.animations {
+		animations = append(animations, name)
+	}
+	return animations
+}
+
+// GetCurrentAnimation 获取当前运行的动画名称
+func (e *AnimationEngine) GetCurrentAnimation() string {
+	e.engineMutex.Lock()
+	defer e.engineMutex.Unlock()
+	return e.current
+}
+
 // runAnimationLoop 是动画执行的核心循环，在单独的 Goroutine 中运行。
 func (e *AnimationEngine) runAnimationLoop(anim Animation, stopChan <-chan struct{}, speedMs int) {
 	deviceName := e.getDeviceName()
@@ -175,7 +194,7 @@ func (e *AnimationEngine) handleLoopExit(stopChan <-chan struct{}, deviceName, a
 	// 这种情况下，旧的 Goroutine 不应该修改引擎状态或重置姿态，
 	// 以避免干扰新动画。
 	if stopChan == e.stopChan {
-		// 只有当自己仍然是“活跃”的动画时，才更新状态并重置姿态
+		// 只有当自己仍然是"活跃"的动画时，才更新状态并重置姿态
 		e.isRunning = false
 		e.current = ""
 		log.Printf("👋 %s 动画 %s 已完成或停止，正在重置姿态...", deviceName, animName)
