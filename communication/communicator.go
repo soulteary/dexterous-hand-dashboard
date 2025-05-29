@@ -2,6 +2,7 @@ package communication
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ type RawMessage struct {
 // Communicator 定义了与 can-bridge Web 服务进行通信的接口
 type Communicator interface {
 	// SendMessage 将 RawMessage 通过 HTTP POST 请求发送到 can-bridge 服务
-	SendMessage(msg RawMessage) error
+	SendMessage(ctx context.Context, msg RawMessage) error
 
 	// GetInterfaceStatus 获取指定 CAN 接口的状态
 	GetInterfaceStatus(ifName string) (isActive bool, err error)
@@ -50,14 +51,22 @@ func NewCanBridgeClient(serviceURL string) Communicator {
 	}
 }
 
-func (c *CanBridgeClient) SendMessage(msg RawMessage) error {
+func (c *CanBridgeClient) SendMessage(ctx context.Context, msg RawMessage) error {
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("序列化消息失败：%w", err)
 	}
 
 	url := fmt.Sprintf("%s/api/can", c.serviceURL)
-	resp, err := c.client.Post(url, "application/json", bytes.NewBuffer(jsonData))
+
+	// 创建带有 context 的请求
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("创建 HTTP 请求失败：%w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("发送 HTTP 请求失败：%w", err)
 	}
