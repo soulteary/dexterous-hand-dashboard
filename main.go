@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"hands/api2"
+	"hands/api"
 	"hands/cli"
 	"hands/config"
 	"hands/device"
@@ -95,7 +95,7 @@ func main() {
 	models.RegisterDeviceTypes()
 
 	// 设置 API 路由
-	api2.NewServer(device.NewDeviceManager()).SetupRoutes(r)
+	api.NewServer(device.NewDeviceManager()).SetupRoutes(r)
 
 	// 启动服务器
 	log.Printf("🌐 CAN 控制服务运行在 http://localhost:%s", config.Config.WebPort)
