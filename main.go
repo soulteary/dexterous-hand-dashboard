@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"hands/api"
+	"hands/api2"
 	"hands/cli"
 	"hands/config"
+	"hands/device"
+	"hands/device/models"
 	"log"
 	"os"
 	"time"
@@ -69,9 +71,6 @@ func main() {
 	if config.Config.DefaultInterface == "" {
 		log.Fatal("❌ 没有设置默认 CAN 接口")
 	}
-
-	// 记录启动时间
-	api.ServerStartTime = time.Now()
 
 	log.Printf("🚀 启动 CAN 控制服务 (支持左右手配置)")
 
