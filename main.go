@@ -94,7 +94,7 @@ func main() {
 	}))
 
 	// 设置 API 路由
-	api.SetupRoutes(r)
+	api2.NewServer(device.NewDeviceManager()).SetupRoutes(r)
 
 	// 启动服务器
 	log.Printf("🌐 CAN 控制服务运行在 http://localhost:%s", config.Config.WebPort)
