@@ -2,6 +2,8 @@
 
 Dexterous hand-operated dashboard for LinkerHand 👋!
 
+[中文文档](./docs/README_CN.md) [中文贡献指南](./docs/contribute_CN.md)
+
 ## Project Overview
 
 **Dexterous Hand Dashboard** is a control dashboard service specifically developed for the LinkerHand dexterous hand device. Built with Golang, it provides a flexible RESTful API interface, enabling finger and palm pose control, execution of preset gestures, real-time sensor data monitoring, and dynamic configuration of hand type (left or right) and CAN interfaces.
