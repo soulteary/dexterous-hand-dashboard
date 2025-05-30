@@ -1,5 +1,7 @@
 # Dexterous Hand Dashboard 项目文档
 
+[贡献指南](./contribute_CN.md)
+
 ## 项目概述
 
 **Dexterous Hand Dashboard** 是专为 LinkerHand 灵巧手设备开发的控制仪表盘服务。该服务基于 Golang 开发，提供灵活的 RESTful API 接口，可实现手指与掌部姿态控制、预设动作执行及实时传感器数据监控，并支持动态配置手型（左手或右手）及 CAN 接口。

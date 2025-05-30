@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand/v2"
@@ -30,13 +31,7 @@ type L10Hand struct {
 // 在 base 基础上进行 ±delta 的扰动，范围限制在 [0, 255]
 func perturb(base byte, delta int) byte {
 	offset := rand.IntN(2*delta+1) - delta
-	v := int(base) + offset
-	if v < 0 {
-		v = 0
-	}
-	if v > 255 {
-		v = 255
-	}
+	v := min(max(int(base)+offset, 0), 255)
 	return byte(v)
 }
 
@@ -79,8 +74,9 @@ func NewL10Hand(config map[string]any) (device.Device, error) {
 		components:   make(map[device.ComponentType][]device.Component),
 		canInterface: canInterface,
 		status: device.DeviceStatus{
-			IsConnected: false,
-			IsActive:    false,
+			// TODO: 这里需要修改，根据实际连接情况设置，因为当前还没有实现连接和断开路由，先设置为 true
+			IsConnected: true,
+			IsActive:    true,
 			LastUpdate:  time.Now(),
 		},
 	}
@@ -250,8 +246,12 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 		return fmt.Errorf("转换指令失败：%w", err)
 	}
 
+	// 创建带有超时的 context，设置 3 秒超时
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// 发送到 can-bridge 服务
-	if err := h.communicator.SendMessage(rawMsg); err != nil {
+	if err := h.communicator.SendMessage(ctx, rawMsg); err != nil {
 		h.status.ErrorCount++
 		h.status.LastError = err.Error()
 		log.Printf("❌ %s (%s) 发送指令失败: %v (ID: 0x%X, Data: %X)", h.id, h.handType.String(), err, rawMsg.ID, rawMsg.Data)

@@ -1,4 +1,4 @@
-package api2
+package api
 
 import (
 	"fmt"
@@ -235,47 +235,8 @@ func (s *Server) handleResetPose(c *gin.Context) {
 	})
 }
 
-// ExecutePresetPose 执行预设姿势
-func (s *Server) ExecutePresetPose(c *gin.Context) {
-	deviceID := c.Param("deviceId")
-	presetName := c.Param("presetName")
-
-	device, err := s.deviceManager.GetDevice(deviceID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, ApiResponse{
-			Status: "error",
-			Error:  fmt.Sprintf("设备 %s 不存在", deviceID),
-		})
-		return
-	}
-
-	// 使用设备的预设姿势方法
-	if err := device.ExecutePreset(presetName); err != nil {
-		c.JSON(http.StatusBadRequest, ApiResponse{
-			Status: "error",
-			Error:  fmt.Sprintf("执行预设姿势失败: %v", err),
-		})
-		return
-	}
-
-	// 停止当前动画（如果有）
-	engine := device.GetAnimationEngine()
-	if engine.IsRunning() {
-		engine.Stop()
-	}
-
-	c.JSON(http.StatusOK, ApiResponse{
-		Status:  "success",
-		Message: fmt.Sprintf("预设姿势 '%s' 执行成功", presetName),
-		Data: map[string]any{
-			"deviceId":   deviceID,
-			"presetName": presetName,
-		},
-	})
-}
-
-// GetSupportedPresets 获取设备支持的预设姿势列表
-func (s *Server) GetSupportedPresets(c *gin.Context) {
+// handleGetPresetPose 获取设备支持的预设姿势列表
+func (s *Server) handleGetPresetPose(c *gin.Context) {
 	deviceID := c.Param("deviceId")
 
 	device, err := s.deviceManager.GetDevice(deviceID)

@@ -5,6 +5,8 @@ import (
 	"hands/api"
 	"hands/cli"
 	"hands/config"
+	"hands/device"
+	"hands/device/models"
 	"log"
 	"os"
 	"time"
@@ -70,9 +72,6 @@ func main() {
 		log.Fatal("❌ 没有设置默认 CAN 接口")
 	}
 
-	// 记录启动时间
-	api.ServerStartTime = time.Now()
-
 	log.Printf("🚀 启动 CAN 控制服务 (支持左右手配置)")
 
 	// 初始化服务
@@ -93,8 +92,10 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	models.RegisterDeviceTypes()
+
 	// 设置 API 路由
-	api.SetupRoutes(r)
+	api.NewServer(device.NewDeviceManager()).SetupRoutes(r)
 
 	// 启动服务器
 	log.Printf("🌐 CAN 控制服务运行在 http://localhost:%s", config.Config.WebPort)
