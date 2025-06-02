@@ -11,7 +11,7 @@ COPY --link . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o dashboard-server .
 
 # ---- Runtime Stage ----
-FROM alpine:3.21
+FROM alpine:3.22
 
 WORKDIR /app
 
