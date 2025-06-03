@@ -233,7 +233,7 @@ const LinkerHandController = {
 
   // 获取传感器数据
   fetchSensorData: function () {
-    fetch("/api/sensors")
+    fetch("/api/legacy/sensors")
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
@@ -335,7 +335,7 @@ async function initializeSystem() {
 async function loadAvailableInterfaces() {
   try {
     logMessage("info", "正在获取可用 CAN 接口...");
-    const response = await fetch("/api/interfaces");
+    const response = await fetch("/api/legacy/interfaces");
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -697,7 +697,7 @@ function updateEnabledHandsStatus() {
 // 检查所有接口状态 - 修复错误处理
 async function checkAllInterfaceStatus() {
   try {
-    const response = await fetch("/api/status");
+    const response = await fetch("/api/legacy/status");
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1055,7 +1055,7 @@ async function sendAllPalmPoses() {
 // 发送手指姿态到指定手部
 async function sendFingerPoseToHand(config, pose) {
   try {
-    const response = await fetch("/api/fingers", {
+    const response = await fetch("/api/legacy/fingers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1086,7 +1086,7 @@ async function sendFingerPoseToHand(config, pose) {
 // 发送掌部姿态到指定手部
 async function sendPalmPoseToHand(config, pose) {
   try {
-    const response = await fetch("/api/palm", {
+    const response = await fetch("/api/legacy/palm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1136,7 +1136,7 @@ async function setPresetPoseForAll(preset) {
 async function setPresetPoseToHand(config, preset) {
   try {
     const response = await fetch(
-      `/api/preset/${preset}?interface=${config.interface}&handType=${config.handType}`,
+      `/api/legacy/preset/${preset}?interface=${config.interface}&handType=${config.handType}`,
       {
         method: "POST",
       },
@@ -1181,7 +1181,7 @@ async function startAnimationForAll(type) {
 // 为指定手部启动动画
 async function startAnimationForHand(config, type, speed) {
   try {
-    const response = await fetch("/api/animation", {
+    const response = await fetch("/api/legacy/animation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1226,7 +1226,7 @@ async function stopAllAnimations() {
 // 停止指定手部的动画
 async function stopAnimationForHand(config) {
   try {
-    const response = await fetch("/api/animation", {
+    const response = await fetch("/api/legacy/animation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1394,7 +1394,7 @@ async function debugSystemStatus() {
   // 测试 API 连通性
   try {
     logMessage("info", "测试 /api/health 连接...");
-    const response = await fetch("/api/health");
+    const response = await fetch("/api/legacy/health");
     if (response.ok) {
       const data = await response.json();
       logMessage("success", "✅ 健康检查通过");
@@ -1409,7 +1409,7 @@ async function debugSystemStatus() {
   // 测试接口 API
   try {
     logMessage("info", "测试 /api/interfaces 连接...");
-    const response = await fetch("/api/interfaces");
+    const response = await fetch("/api/legacy/interfaces");
     if (response.ok) {
       const data = await response.json();
       logMessage("success", "✅ 接口 API 通过");
