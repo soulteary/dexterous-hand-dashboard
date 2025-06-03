@@ -31,9 +31,8 @@ type Device interface {
 
 // Command 代表一个发送给设备的指令
 type Command interface {
-	Type() string            // 指令类型，例如 "SetFingerPose", "SetPalmAngle"
-	Payload() []byte         // 指令的实际数据
-	TargetComponent() string // 目标组件 ID
+	Type() string    // 指令类型，例如 "SetFingerPose", "SetPalmAngle"
+	Payload() []byte // 指令的实际数据
 }
 
 // SensorData 代表从传感器读取的数据
