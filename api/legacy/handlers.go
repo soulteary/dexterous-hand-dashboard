@@ -23,3 +23,16 @@ func (s *LegacyServer) handleHealth(c *gin.Context) {
 		},
 	})
 }
+
+// handleInterfaces 获取可用接口列表处理函数
+func (s *LegacyServer) handleInterfaces(c *gin.Context) {
+	responseData := map[string]any{
+		"availableInterfaces": config.Config.AvailableInterfaces,
+		"defaultInterface":    config.Config.DefaultInterface,
+	}
+
+	c.JSON(http.StatusOK, define.ApiResponse{
+		Status: "success",
+		Data:   responseData,
+	})
+}
