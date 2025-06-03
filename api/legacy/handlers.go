@@ -527,3 +527,94 @@ func (s *LegacyServer) handleSensors(c *gin.Context) {
 		})
 	}
 }
+
+// handleStatus 系统状态处理函数
+func (s *LegacyServer) handleStatus(c *gin.Context) {
+	// 构建动画状态
+	animationStatus := make(map[string]bool)
+
+	// 获取手型配置
+	allHandConfigs := s.mapper.GetAllHandConfigs()
+	handConfigsData := make(map[string]any)
+
+	// 构建接口状态信息
+	interfaceStatuses := make(map[string]any)
+
+	// 检查 CAN 服务状态 - 通过尝试获取设备状态来判断
+	canStatus := make(map[string]bool)
+
+	for _, ifName := range config.Config.AvailableInterfaces {
+		// 获取对应的设备
+		dev, err := s.mapper.GetDeviceForInterface(ifName)
+		if err != nil {
+			// 设备不可用
+			animationStatus[ifName] = false
+			canStatus[ifName] = false
+			handConfigsData[ifName] = map[string]any{
+				"handType": "right",
+				"handId":   define.HAND_TYPE_RIGHT,
+			}
+		} else {
+			// 获取动画状态
+			animEngine := dev.GetAnimationEngine()
+			animationStatus[ifName] = animEngine.IsRunning()
+
+			// 获取设备状态来判断 CAN 服务状态
+			status, err := dev.GetStatus()
+			if err != nil {
+				canStatus[ifName] = false
+			} else {
+				canStatus[ifName] = status.IsConnected && status.IsActive
+			}
+
+			// 获取手型配置
+			if handConfig, exists := allHandConfigs[ifName]; exists {
+				handConfigsData[ifName] = map[string]any{
+					"handType": handConfig.HandType,
+					"handId":   handConfig.HandId,
+				}
+			} else {
+				// 从设备获取当前手型
+				handType := dev.GetHandType()
+				handTypeStr := "right"
+				handId := uint32(define.HAND_TYPE_RIGHT)
+				if handType == define.HAND_TYPE_LEFT {
+					handTypeStr = "left"
+					handId = uint32(define.HAND_TYPE_LEFT)
+				}
+				handConfigsData[ifName] = map[string]any{
+					"handType": handTypeStr,
+					"handId":   handId,
+				}
+			}
+		}
+
+		// 构建接口状态
+		interfaceStatuses[ifName] = map[string]any{
+			"active":          canStatus[ifName],
+			"animationActive": animationStatus[ifName],
+			"handConfig":      handConfigsData[ifName],
+		}
+	}
+
+	// 计算活跃接口数量
+	activeInterfacesCount := 0
+	for _, active := range canStatus {
+		if active {
+			activeInterfacesCount++
+		}
+	}
+
+	c.JSON(http.StatusOK, define.ApiResponse{
+		Status: "success",
+		Data: map[string]any{
+			"interfaces":          interfaceStatuses,
+			"uptime":              time.Since(s.startTime).String(),
+			"canServiceURL":       config.Config.CanServiceURL,
+			"defaultInterface":    config.Config.DefaultInterface,
+			"availableInterfaces": config.Config.AvailableInterfaces,
+			"activeInterfaces":    activeInterfacesCount,
+			"handConfigs":         handConfigsData,
+		},
+	})
+}
