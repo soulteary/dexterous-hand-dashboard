@@ -1,0 +1,10 @@
+FROM alpine:3.21
+
+WORKDIR /app
+
+COPY --link . .
+
+EXPOSE 9099
+ENV SERVER_PORT="9099"
+
+CMD ["/app/dashboard-server"]
