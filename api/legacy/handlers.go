@@ -330,3 +330,100 @@ func (s *LegacyServer) handlePreset(c *gin.Context) {
 		Data:    map[string]any{"interface": ifName, "pose": presetDetails.FingerPose},
 	})
 }
+
+// handleAnimation 动画控制处理函数
+func (s *LegacyServer) handleAnimation(c *gin.Context) {
+	var req AnimationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  "无效的动画请求：" + err.Error(),
+		})
+		return
+	}
+
+	// 如果未指定接口，使用默认接口
+	if req.Interface == "" {
+		req.Interface = config.Config.DefaultInterface
+	}
+
+	// 验证接口
+	if !s.mapper.IsValidInterface(req.Interface) {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
+		})
+		return
+	}
+
+	// 获取对应的设备
+	dev, err := s.mapper.GetDeviceForInterface(req.Interface)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "获取设备失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 获取动画引擎
+	animEngine := dev.GetAnimationEngine()
+
+	// 停止当前动画
+	if err := s.mapper.StopAllAnimations(req.Interface); err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "停止动画失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 如果是停止命令，直接返回
+	if req.Type == "stop" {
+		c.JSON(http.StatusOK, define.ApiResponse{
+			Status:  "success",
+			Message: fmt.Sprintf("%s 动画已停止", req.Interface),
+		})
+		return
+	}
+
+	// 处理速度参数
+	if req.Speed <= 0 {
+		req.Speed = 500 // 默认速度
+	}
+
+	// 根据类型启动动画
+	switch req.Type {
+	case "wave":
+		if err := animEngine.Start("wave", req.Speed); err != nil {
+			c.JSON(http.StatusInternalServerError, define.ApiResponse{
+				Status: "error",
+				Error:  fmt.Sprintf("启动波浪动画失败：%v", err),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, define.ApiResponse{
+			Status:  "success",
+			Message: fmt.Sprintf("%s 波浪动画已启动", req.Interface),
+			Data:    map[string]any{"interface": req.Interface, "speed": req.Speed},
+		})
+	case "sway":
+		if err := animEngine.Start("sway", req.Speed); err != nil {
+			c.JSON(http.StatusInternalServerError, define.ApiResponse{
+				Status: "error",
+				Error:  fmt.Sprintf("启动横向摆动动画失败：%v", err),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, define.ApiResponse{
+			Status:  "success",
+			Message: fmt.Sprintf("%s 横向摆动动画已启动", req.Interface),
+			Data:    map[string]any{"interface": req.Interface, "speed": req.Speed},
+		})
+	default:
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  "无效的动画类型",
+		})
+	}
+}
