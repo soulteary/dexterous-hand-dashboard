@@ -36,3 +36,29 @@ func (s *LegacyServer) handleInterfaces(c *gin.Context) {
 		Data:   responseData,
 	})
 }
+
+// handleHandConfigs 获取手型配置处理函数
+func (s *LegacyServer) handleHandConfigs(c *gin.Context) {
+	allHandConfigs := s.mapper.GetAllHandConfigs()
+
+	result := make(map[string]any)
+	for _, ifName := range config.Config.AvailableInterfaces {
+		if handConfig, exists := allHandConfigs[ifName]; exists {
+			result[ifName] = map[string]any{
+				"handType": handConfig.HandType,
+				"handId":   handConfig.HandId,
+			}
+		} else {
+			// 返回默认配置
+			result[ifName] = map[string]any{
+				"handType": "right",
+				"handId":   define.HAND_TYPE_RIGHT,
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, define.ApiResponse{
+		Status: "success",
+		Data:   result,
+	})
+}
