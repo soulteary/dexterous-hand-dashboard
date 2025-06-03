@@ -257,3 +257,76 @@ func (s *LegacyServer) handlePalm(c *gin.Context) {
 		Data:    map[string]any{"interface": req.Interface, "pose": req.Pose},
 	})
 }
+
+// handlePreset 预设姿势处理函数
+func (s *LegacyServer) handlePreset(c *gin.Context) {
+	pose := c.Param("pose")
+
+	// 从查询参数获取接口名称和手型
+	ifName := c.Query("interface")
+	// handType := c.Query("handType") // TODO: 旧版 API 中声明但未使用，先放着，等 reivew 时候看看
+
+	if ifName == "" {
+		ifName = config.Config.DefaultInterface
+	}
+
+	// 验证接口
+	if !s.mapper.IsValidInterface(ifName) {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces),
+		})
+		return
+	}
+
+	// 获取对应的设备
+	dev, err := s.mapper.GetDeviceForInterface(ifName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "获取设备失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 停止当前动画
+	if err := s.mapper.StopAllAnimations(ifName); err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "停止动画失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 获取预设姿势详细信息（用于返回具体参数）
+	presetDetails, exists := dev.GetPresetDetails(pose)
+	if !exists {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  "无效的预设姿势",
+		})
+		return
+	}
+
+	// 使用设备的预设姿势方法
+	if err := dev.ExecutePreset(pose); err != nil {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  "无效的预设姿势",
+		})
+		return
+	}
+
+	// 获取预设姿势的描述
+	description := dev.GetPresetDescription(pose)
+	message := fmt.Sprintf("已设置预设姿势: %s", pose)
+	if description != "" {
+		message = fmt.Sprintf("已设置%s", description)
+	}
+
+	c.JSON(http.StatusOK, define.ApiResponse{
+		Status:  "success",
+		Message: message,
+		Data:    map[string]any{"interface": ifName, "pose": presetDetails.FingerPose},
+	})
+}

@@ -378,3 +378,8 @@ func (h *L10Hand) ExecutePreset(presetName string) error {
 func (h *L10Hand) GetPresetDescription(presetName string) string {
 	return h.presetManager.GetPresetDescription(presetName)
 }
+
+// GetPresetDetails 获取预设姿势详细信息
+func (h *L10Hand) GetPresetDetails(presetName string) (device.PresetPose, bool) {
+	return h.presetManager.GetPreset(presetName)
+}

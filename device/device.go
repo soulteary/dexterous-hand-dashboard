@@ -23,9 +23,10 @@ type Device interface {
 	GetAnimationEngine() *AnimationEngine // 获取设备的动画引擎
 
 	// --- 预设姿势相关方法 ---
-	GetSupportedPresets() []string                 // 获取支持的预设姿势列表
-	ExecutePreset(presetName string) error         // 执行预设姿势
-	GetPresetDescription(presetName string) string // 获取预设姿势描述
+	GetSupportedPresets() []string                         // 获取支持的预设姿势列表
+	ExecutePreset(presetName string) error                 // 执行预设姿势
+	GetPresetDescription(presetName string) string         // 获取预设姿势描述
+	GetPresetDetails(presetName string) (PresetPose, bool) // 获取预设姿势详细信息
 }
 
 // Command 代表一个发送给设备的指令
