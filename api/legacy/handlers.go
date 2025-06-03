@@ -7,6 +7,7 @@ import (
 
 	"hands/config"
 	"hands/define"
+	"hands/device"
 
 	"github.com/gin-gonic/gin"
 )
@@ -424,6 +425,105 @@ func (s *LegacyServer) handleAnimation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, define.ApiResponse{
 			Status: "error",
 			Error:  "无效的动画类型",
+		})
+	}
+}
+
+// handleSensors 获取传感器数据处理函数
+// TODO: 现在的传感器数据都是模拟的，先不进行严格定义，等到有文档了之后修改设备层和这里
+func (s *LegacyServer) handleSensors(c *gin.Context) {
+	// 从查询参数获取接口名称
+	ifName := c.Query("interface")
+
+	if ifName != "" {
+		// 验证接口
+		if !s.mapper.IsValidInterface(ifName) {
+			c.JSON(http.StatusBadRequest, define.ApiResponse{
+				Status: "error",
+				Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", ifName, config.Config.AvailableInterfaces),
+			})
+			return
+		}
+
+		// 获取对应的设备
+		dev, err := s.mapper.GetDeviceForInterface(ifName)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, define.ApiResponse{
+				Status: "error",
+				Error:  "获取设备失败：" + err.Error(),
+			})
+			return
+		}
+
+		// 获取设备的传感器组件
+		sensorComponents := dev.GetComponents(device.SensorComponent)
+
+		// 构建传感器数据响应
+		sensorData := make(map[string]any)
+		for _, component := range sensorComponents {
+			sensorId := component.GetID()
+			data, err := dev.ReadSensorData(sensorId)
+			if err != nil {
+				// 如果读取失败，记录错误状态
+				sensorData[sensorId] = map[string]any{
+					"error":     err.Error(),
+					"timestamp": time.Now(),
+				}
+				continue
+			}
+
+			sensorData[sensorId] = map[string]any{
+				"values":    data.Values(),
+				"timestamp": data.Timestamp(),
+			}
+		}
+
+		c.JSON(http.StatusOK, define.ApiResponse{
+			Status: "success",
+			Data:   sensorData,
+		})
+	} else {
+		// 返回所有接口的传感器数据
+		allSensorData := make(map[string]any)
+
+		for _, ifName := range config.Config.AvailableInterfaces {
+			// 获取对应的设备
+			dev, err := s.mapper.GetDeviceForInterface(ifName)
+			if err != nil {
+				allSensorData[ifName] = map[string]any{
+					"error": "设备不可用：" + err.Error(),
+				}
+				continue
+			}
+
+			// 获取设备的传感器组件
+			sensorComponents := dev.GetComponents(device.SensorComponent)
+
+			// 构建传感器数据响应
+			sensorData := make(map[string]any)
+			for _, component := range sensorComponents {
+				sensorId := component.GetID()
+				data, err := dev.ReadSensorData(sensorId)
+				if err != nil {
+					sensorData[sensorId] = map[string]any{
+						"error":     err.Error(),
+						"timestamp": time.Now(),
+					}
+					continue
+				}
+
+				sensorData[sensorId] = map[string]any{
+					"values":    data.Values(),
+					"timestamp": data.Timestamp(),
+				}
+			}
+
+			allSensorData[ifName] = sensorData
+		}
+
+		c.JSON(http.StatusOK, define.ApiResponse{
+			Status: "success",
+			Data:   allSensorData,
 		})
 	}
 }
