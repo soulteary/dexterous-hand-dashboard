@@ -115,3 +115,74 @@ func (s *LegacyServer) handleHandType(c *gin.Context) {
 		},
 	})
 }
+
+// handleFingers 手指姿态处理函数
+func (s *LegacyServer) handleFingers(c *gin.Context) {
+	var req FingerPoseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  "无效的手指姿态数据：" + err.Error(),
+		})
+		return
+	}
+
+	// 验证每个值是否在范围内
+	for _, v := range req.Pose {
+		if v < 0 || v > 255 {
+			c.JSON(http.StatusBadRequest, define.ApiResponse{
+				Status: "error",
+				Error:  "手指姿态值必须在 0-255 范围内",
+			})
+			return
+		}
+	}
+
+	// 如果未指定接口，使用默认接口
+	if req.Interface == "" {
+		req.Interface = config.Config.DefaultInterface
+	}
+
+	// 验证接口
+	if !s.mapper.IsValidInterface(req.Interface) {
+		c.JSON(http.StatusBadRequest, define.ApiResponse{
+			Status: "error",
+			Error:  fmt.Sprintf("无效的接口 %s，可用接口: %v", req.Interface, config.Config.AvailableInterfaces),
+		})
+		return
+	}
+
+	// 获取对应的设备
+	dev, err := s.mapper.GetDeviceForInterface(req.Interface)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "获取设备失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 停止当前动画
+	if err := s.mapper.StopAllAnimations(req.Interface); err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "停止动画失败：" + err.Error(),
+		})
+		return
+	}
+
+	// 设置手指姿态
+	if err := dev.SetFingerPose(req.Pose); err != nil {
+		c.JSON(http.StatusInternalServerError, define.ApiResponse{
+			Status: "error",
+			Error:  "发送手指姿态失败：" + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, define.ApiResponse{
+		Status:  "success",
+		Message: "手指姿态指令发送成功",
+		Data:    map[string]any{"interface": req.Interface, "pose": req.Pose},
+	})
+}
