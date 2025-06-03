@@ -142,7 +142,7 @@ func (h *L10Hand) SetFingerPose(pose []byte) error {
 	}
 
 	// 创建指令
-	cmd := device.NewFingerPoseCommand("all", perturbedPose)
+	cmd := device.NewFingerPoseCommand(perturbedPose)
 
 	// 执行指令
 	err := h.ExecuteCommand(cmd)
@@ -197,11 +197,9 @@ func (h *L10Hand) ResetPose() error {
 	return nil
 }
 
-// commandToRawMessage 将通用指令转换为 L10 特定的 CAN 消息
-func (h *L10Hand) commandToRawMessage(cmd device.Command) (communication.RawMessage, error) {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
-
+// commandToRawMessageUnsafe 将通用指令转换为 L10 特定的 CAN 消息（不加锁版本）
+// 注意：此方法不是线程安全的，只应在已获取适当锁的情况下调用
+func (h *L10Hand) commandToRawMessageUnsafe(cmd device.Command) (communication.RawMessage, error) {
 	var data []byte
 	canID := uint32(h.handType)
 
@@ -238,8 +236,8 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 		return fmt.Errorf("设备 %s 未连接或未激活", h.id)
 	}
 
-	// 转换指令为 CAN 消息
-	rawMsg, err := h.commandToRawMessage(cmd)
+	// 转换指令为 CAN 消息（使用不加锁版本，因为已经在写锁保护下）
+	rawMsg, err := h.commandToRawMessageUnsafe(cmd)
 	if err != nil {
 		h.status.ErrorCount++
 		h.status.LastError = err.Error()
@@ -259,12 +257,9 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 	}
 
 	h.status.LastUpdate = time.Now()
-	// 成功的日志记录移到 SetFingerPose 和 SetPalmPose 中，因为那里有更详细的信息
+
 	return nil
 }
-
-// --- 其他 L10Hand 方法 (initializeComponents, GetID, GetModel, ReadSensorData, etc.) 保持不变 ---
-// --- 确保它们存在且与您上传的版本一致 ---
 
 func (h *L10Hand) initializeComponents(_ map[string]any) error {
 	// 初始化传感器组件

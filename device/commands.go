@@ -3,7 +3,7 @@ package device
 // FingerPoseCommand 手指姿态指令
 type FingerPoseCommand struct{ poseData []byte }
 
-func NewFingerPoseCommand(fingerID string, poseData []byte) *FingerPoseCommand {
+func NewFingerPoseCommand(poseData []byte) *FingerPoseCommand {
 	return &FingerPoseCommand{poseData: poseData}
 }
 
