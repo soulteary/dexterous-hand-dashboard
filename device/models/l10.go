@@ -263,13 +263,9 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 
 func (h *L10Hand) initializeComponents(_ map[string]any) error {
 	// 初始化传感器组件
-	sensors := []device.Component{
-		component.NewPressureSensor("pressure_thumb", map[string]any{"location": "thumb"}),
-		component.NewPressureSensor("pressure_index", map[string]any{"location": "index"}),
-		component.NewPressureSensor("pressure_middle", map[string]any{"location": "middle"}),
-		component.NewPressureSensor("pressure_ring", map[string]any{"location": "ring"}),
-		component.NewPressureSensor("pressure_pinky", map[string]any{"location": "pinky"}),
-	}
+	defaultSensor := component.NewSensorData(h.canInterface)
+	defaultSensor.MockData()
+	sensors := []device.Component{defaultSensor}
 	h.components[device.SensorComponent] = sensors
 	return nil
 }
@@ -282,19 +278,17 @@ func (h *L10Hand) GetModel() string {
 	return h.model
 }
 
-func (h *L10Hand) ReadSensorData(sensorID string) (device.SensorData, error) {
+func (h *L10Hand) ReadSensorData() (device.SensorData, error) {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
 
 	sensors := h.components[device.SensorComponent]
 	for _, comp := range sensors {
-		if comp.GetID() == sensorID {
-			if sensor, ok := comp.(component.Sensor); ok {
-				return sensor.ReadData()
-			}
+		if sensor, ok := comp.(component.Sensor); ok {
+			return sensor.ReadData()
 		}
 	}
-	return nil, fmt.Errorf("传感器 %s 不存在", sensorID)
+	return nil, fmt.Errorf("传感器不存在")
 }
 
 func (h *L10Hand) GetComponents(componentType device.ComponentType) []device.Component {

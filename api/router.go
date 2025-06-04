@@ -67,8 +67,7 @@ func (s *Server) SetupRoutes(r *gin.Engine) {
 				// 传感器数据路由
 				sensors := deviceRoutes.Group("/sensors")
 				{
-					sensors.GET("", s.handleGetSensors)              // 获取所有传感器数据
-					sensors.GET("/:sensorId", s.handleGetSensorData) // 获取特定传感器数据
+					sensors.GET("", s.handleGetSensors) // 获取所有传感器数据
 				}
 
 				// 设备状态路由

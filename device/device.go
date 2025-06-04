@@ -12,7 +12,7 @@ type Device interface {
 	GetHandType() define.HandType                          // 获取设备手型
 	SetHandType(handType define.HandType) error            // 设置设备手型
 	ExecuteCommand(cmd Command) error                      // 执行一个通用指令
-	ReadSensorData(sensorID string) (SensorData, error)    // 读取特定传感器数据
+	ReadSensorData() (SensorData, error)                   // 读取特定传感器数据
 	GetComponents(componentType ComponentType) []Component // 获取指定类型的组件
 	GetStatus() (DeviceStatus, error)                      // 获取设备状态
 	Connect() error                                        // 连接设备
@@ -37,9 +37,9 @@ type Command interface {
 
 // SensorData 代表从传感器读取的数据
 type SensorData interface {
-	Timestamp() time.Time
+	// Timestamp() time.Time
 	Values() map[string]any // 例如 {"pressure": 100, "angle": 30.5}
-	SensorID() string
+	// SensorID() string
 }
 
 // ComponentType 定义组件类型
@@ -53,10 +53,10 @@ const (
 
 // Component 代表设备的一个可插拔组件
 type Component interface {
-	GetID() string
-	GetType() ComponentType
-	GetConfiguration() map[string]interface{} // 组件的特定配置
-	IsActive() bool
+	// GetID() string
+	// GetType() ComponentType
+	// GetConfiguration() map[string]interface{} // 组件的特定配置
+	// IsActive() bool
 }
 
 // DeviceStatus 代表设备状态
