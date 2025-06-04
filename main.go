@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hands/api"
+	"hands/api/legacy"
 	"hands/cli"
 	"hands/config"
 	"hands/device"
@@ -94,8 +95,15 @@ func main() {
 
 	models.RegisterDeviceTypes()
 
+	deviceManager := device.NewDeviceManager()
+
 	// 设置 API 路由
-	api.NewServer(device.NewDeviceManager()).SetupRoutes(r)
+	api.NewServer(deviceManager).SetupRoutes(r)
+	legacyServer, err := legacy.NewLegacyServer(deviceManager)
+	if err != nil {
+		log.Fatalf("❌ 初始化旧版 API 失败: %v", err)
+	}
+	legacyServer.SetupRoutes(r)
 
 	// 启动服务器
 	log.Printf("🌐 CAN 控制服务运行在 http://localhost:%s", config.Config.WebPort)

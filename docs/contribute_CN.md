@@ -27,6 +27,7 @@ type Device interface {
     GetSupportedPresets() []string
     ExecutePreset(presetName string) error
     GetPresetDescription(presetName string) string
+    GetPresetDetails(presetName string) (PresetPose, bool)
 }
 ```
 

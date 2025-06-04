@@ -142,7 +142,7 @@ func (h *L10Hand) SetFingerPose(pose []byte) error {
 	}
 
 	// 创建指令
-	cmd := device.NewFingerPoseCommand("all", perturbedPose)
+	cmd := device.NewFingerPoseCommand(perturbedPose)
 
 	// 执行指令
 	err := h.ExecuteCommand(cmd)
@@ -197,11 +197,9 @@ func (h *L10Hand) ResetPose() error {
 	return nil
 }
 
-// commandToRawMessage 将通用指令转换为 L10 特定的 CAN 消息
-func (h *L10Hand) commandToRawMessage(cmd device.Command) (communication.RawMessage, error) {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
-
+// commandToRawMessageUnsafe 将通用指令转换为 L10 特定的 CAN 消息（不加锁版本）
+// 注意：此方法不是线程安全的，只应在已获取适当锁的情况下调用
+func (h *L10Hand) commandToRawMessageUnsafe(cmd device.Command) (communication.RawMessage, error) {
 	var data []byte
 	canID := uint32(h.handType)
 
@@ -238,8 +236,8 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 		return fmt.Errorf("设备 %s 未连接或未激活", h.id)
 	}
 
-	// 转换指令为 CAN 消息
-	rawMsg, err := h.commandToRawMessage(cmd)
+	// 转换指令为 CAN 消息（使用不加锁版本，因为已经在写锁保护下）
+	rawMsg, err := h.commandToRawMessageUnsafe(cmd)
 	if err != nil {
 		h.status.ErrorCount++
 		h.status.LastError = err.Error()
@@ -259,22 +257,15 @@ func (h *L10Hand) ExecuteCommand(cmd device.Command) error {
 	}
 
 	h.status.LastUpdate = time.Now()
-	// 成功的日志记录移到 SetFingerPose 和 SetPalmPose 中，因为那里有更详细的信息
+
 	return nil
 }
 
-// --- 其他 L10Hand 方法 (initializeComponents, GetID, GetModel, ReadSensorData, etc.) 保持不变 ---
-// --- 确保它们存在且与您上传的版本一致 ---
-
 func (h *L10Hand) initializeComponents(_ map[string]any) error {
 	// 初始化传感器组件
-	sensors := []device.Component{
-		component.NewPressureSensor("pressure_thumb", map[string]any{"location": "thumb"}),
-		component.NewPressureSensor("pressure_index", map[string]any{"location": "index"}),
-		component.NewPressureSensor("pressure_middle", map[string]any{"location": "middle"}),
-		component.NewPressureSensor("pressure_ring", map[string]any{"location": "ring"}),
-		component.NewPressureSensor("pressure_pinky", map[string]any{"location": "pinky"}),
-	}
+	defaultSensor := component.NewSensorData(h.canInterface)
+	defaultSensor.MockData()
+	sensors := []device.Component{defaultSensor}
 	h.components[device.SensorComponent] = sensors
 	return nil
 }
@@ -287,19 +278,17 @@ func (h *L10Hand) GetModel() string {
 	return h.model
 }
 
-func (h *L10Hand) ReadSensorData(sensorID string) (device.SensorData, error) {
+func (h *L10Hand) ReadSensorData() (device.SensorData, error) {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
 
 	sensors := h.components[device.SensorComponent]
 	for _, comp := range sensors {
-		if comp.GetID() == sensorID {
-			if sensor, ok := comp.(component.Sensor); ok {
-				return sensor.ReadData()
-			}
+		if sensor, ok := comp.(component.Sensor); ok {
+			return sensor.ReadData()
 		}
 	}
-	return nil, fmt.Errorf("传感器 %s 不存在", sensorID)
+	return nil, fmt.Errorf("传感器不存在")
 }
 
 func (h *L10Hand) GetComponents(componentType device.ComponentType) []device.Component {
@@ -377,4 +366,13 @@ func (h *L10Hand) ExecutePreset(presetName string) error {
 // GetPresetDescription 获取预设姿势描述
 func (h *L10Hand) GetPresetDescription(presetName string) string {
 	return h.presetManager.GetPresetDescription(presetName)
+}
+
+// GetPresetDetails 获取预设姿势详细信息
+func (h *L10Hand) GetPresetDetails(presetName string) (device.PresetPose, bool) {
+	return h.presetManager.GetPreset(presetName)
+}
+
+func (h *L10Hand) GetCanStatus() (map[string]bool, error) {
+	return h.communicator.GetAllInterfaceStatuses()
 }
