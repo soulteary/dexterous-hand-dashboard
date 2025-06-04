@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hands/config"
+	"hands/define"
 	"io"
 	"net/http"
 	"time"
@@ -22,9 +24,6 @@ type RawMessage struct {
 type Communicator interface {
 	// SendMessage 将 RawMessage 通过 HTTP POST 请求发送到 can-bridge 服务
 	SendMessage(ctx context.Context, msg RawMessage) error
-
-	// GetInterfaceStatus 获取指定 CAN 接口的状态
-	GetInterfaceStatus(ifName string) (isActive bool, err error)
 
 	// GetAllInterfaceStatuses 获取所有已知 CAN 接口的状态
 	GetAllInterfaceStatuses() (statuses map[string]bool, err error)
@@ -45,9 +44,7 @@ type CanBridgeClient struct {
 func NewCanBridgeClient(serviceURL string) Communicator {
 	return &CanBridgeClient{
 		serviceURL: serviceURL,
-		client: &http.Client{
-			Timeout: 5 * time.Second,
-		},
+		client:     &http.Client{Timeout: 5 * time.Second},
 	}
 }
 
@@ -60,7 +57,7 @@ func (c *CanBridgeClient) SendMessage(ctx context.Context, msg RawMessage) error
 	url := fmt.Sprintf("%s/api/can", c.serviceURL)
 
 	// 创建带有 context 的请求
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("创建 HTTP 请求失败：%w", err)
 	}
@@ -80,34 +77,19 @@ func (c *CanBridgeClient) SendMessage(ctx context.Context, msg RawMessage) error
 	return nil
 }
 
-func (c *CanBridgeClient) GetInterfaceStatus(ifName string) (bool, error) {
-	url := fmt.Sprintf("%s/api/status/%s", c.serviceURL, ifName)
-	resp, err := c.client.Get(url)
-	if err != nil {
-		return false, fmt.Errorf("获取接口状态失败：%w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("can-bridge 服务返回错误：%d", resp.StatusCode)
-	}
-
-	var status struct {
-		Active bool `json:"active"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
-		return false, fmt.Errorf("解析状态响应失败：%w", err)
-	}
-
-	return status.Active, nil
-}
-
 func (c *CanBridgeClient) GetAllInterfaceStatuses() (map[string]bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
 	url := fmt.Sprintf("%s/api/status", c.serviceURL)
-	resp, err := c.client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("获取所有接口状态失败：%w", err)
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("发送 HTTP 请求失败：%w", err)
 	}
 	defer resp.Body.Close()
 
@@ -115,12 +97,29 @@ func (c *CanBridgeClient) GetAllInterfaceStatuses() (map[string]bool, error) {
 		return nil, fmt.Errorf("can-bridge 服务返回错误：%d", resp.StatusCode)
 	}
 
-	var statuses map[string]bool
-	if err := json.NewDecoder(resp.Body).Decode(&statuses); err != nil {
+	var statusResp define.ApiResponse
+	if err := json.NewDecoder(resp.Body).Decode(&statusResp); err != nil {
 		return nil, fmt.Errorf("解析状态响应失败：%w", err)
 	}
 
-	return statuses, nil
+	result := make(map[string]bool)
+	for _, ifName := range config.Config.AvailableInterfaces {
+		result[ifName] = false
+	}
+
+	if statusData, ok := statusResp.Data.(map[string]interface{}); ok {
+		if interfaces, ok := statusData["interfaces"].(map[string]interface{}); ok {
+			for ifName, ifStatus := range interfaces {
+				if status, ok := ifStatus.(map[string]interface{}); ok {
+					if active, ok := status["active"].(bool); ok {
+						result[ifName] = active
+					}
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func (c *CanBridgeClient) SetServiceURL(url string) { c.serviceURL = url }

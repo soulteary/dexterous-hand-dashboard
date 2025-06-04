@@ -508,6 +508,13 @@ func (s *LegacyServer) handleStatus(c *gin.Context) {
 	// 检查 CAN 服务状态 - 通过尝试获取设备状态来判断
 	canStatus := make(map[string]bool)
 
+	for ifName, handConfig := range allHandConfigs {
+		handConfigsData[ifName] = map[string]any{
+			"handType": handConfig.HandType,
+			"handId":   handConfig.HandId,
+		}
+	}
+
 	for _, ifName := range config.Config.AvailableInterfaces {
 		// 获取对应的设备
 		dev, err := s.mapper.GetDeviceForInterface(ifName)
@@ -525,32 +532,11 @@ func (s *LegacyServer) handleStatus(c *gin.Context) {
 			animationStatus[ifName] = animEngine.IsRunning()
 
 			// 获取设备状态来判断 CAN 服务状态
-			status, err := dev.GetStatus()
+			rawCanStatus, err := dev.GetCanStatus()
 			if err != nil {
 				canStatus[ifName] = false
 			} else {
-				canStatus[ifName] = status.IsConnected && status.IsActive
-			}
-
-			// 获取手型配置
-			if handConfig, exists := allHandConfigs[ifName]; exists {
-				handConfigsData[ifName] = map[string]any{
-					"handType": handConfig.HandType,
-					"handId":   handConfig.HandId,
-				}
-			} else {
-				// 从设备获取当前手型
-				handType := dev.GetHandType()
-				handTypeStr := "right"
-				handId := uint32(define.HAND_TYPE_RIGHT)
-				if handType == define.HAND_TYPE_LEFT {
-					handTypeStr = "left"
-					handId = uint32(define.HAND_TYPE_LEFT)
-				}
-				handConfigsData[ifName] = map[string]any{
-					"handType": handTypeStr,
-					"handId":   handId,
-				}
+				canStatus[ifName] = rawCanStatus[ifName]
 			}
 		}
 

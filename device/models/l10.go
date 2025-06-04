@@ -372,3 +372,7 @@ func (h *L10Hand) GetPresetDescription(presetName string) string {
 func (h *L10Hand) GetPresetDetails(presetName string) (device.PresetPose, bool) {
 	return h.presetManager.GetPreset(presetName)
 }
+
+func (h *L10Hand) GetCanStatus() (map[string]bool, error) {
+	return h.communicator.GetAllInterfaceStatuses()
+}

@@ -14,6 +14,7 @@ type Device interface {
 	ExecuteCommand(cmd Command) error                      // 执行一个通用指令
 	ReadSensorData() (SensorData, error)                   // 读取特定传感器数据
 	GetComponents(componentType ComponentType) []Component // 获取指定类型的组件
+	GetCanStatus() (map[string]bool, error)
 	GetStatus() (DeviceStatus, error)                      // 获取设备状态
 	Connect() error                                        // 连接设备
 	Disconnect() error                                     // 断开设备连接
