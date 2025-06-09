@@ -1,120 +1,246 @@
-# Dexterous Hand Dashboard Project Documentation
+# 灵巧手 Linker Hand L10/O7 控制面板
 
-Dexterous hand-operated dashboard for LinkerHand 👋!
+一个基于Web的灵巧手控制面板，支持L10和O7两种设备型号，提供直观的图形化界面来控制机械手的手指关节、掌部姿态和动画效果。
 
-## Project Overview
+## 🚀 主要特性
 
-**Dexterous Hand Dashboard** is a control dashboard service specifically developed for the LinkerHand dexterous hand device. Built with Golang, it provides a flexible RESTful API interface, enabling finger and palm pose control, execution of preset gestures, real-time sensor data monitoring, and dynamic configuration of hand type (left or right) and CAN interfaces.
+### 设备支持
+- **L10型号**: 支持6个关节控制（5个手指 + 1个掌部关节）
+- **O7型号**: 支持7个关节控制（7个独立关节）
+- **自动设备检测**: 智能识别连接的设备类型
+- **动态设备切换**: 运行时切换L10/O7模式
 
-## Features
+### 手部配置管理
+- **多手部支持**: 同时控制多个CAN接口的手部
+- **左右手配置**: 每个手部可独立配置为左手或右手
+- **CAN ID管理**: 自动分配和管理CAN ID（左手0x28，右手0x27）
+- **实时状态监控**: 显示每个手部的连接状态
 
-* **Dynamic Hand Configuration**: Supports dynamic switching between left and right hand types.
-* **Flexible Interface Configuration**: Supports various CAN interfaces (such as `can0`, `can1`) configurable through command-line arguments or environment variables.
-* **Finger and Palm Pose Control**: Sends finger (6-byte) and palm (4-byte) pose data.
-* **Preset Gesture Execution**: Includes numerous predefined gestures such as fist, open hand, pinch, thumbs-up, and numeric gestures.
-* **Real-time Animation Control**: Supports dynamic initiation and termination of animations like wave and horizontal sway.
-* **Real-time Sensor Data Monitoring**: Provides real-time simulation and updating of pressure data.
-* **Health Check and Service Monitoring**: Monitors CAN service status and interface activity in real time.
+### 控制功能
+- **实时关节控制**: 滑块控制每个关节的位置（0-255）
+- **预设姿势**: 内置多种常用手势（握拳、张开、捏取等）
+- **数字手势**: 支持1-9数字手势
+- **动画系统**: 波浪动画、摆动动画等
+- **速度控制**: O7设备支持关节速度独立控制
 
-## API Endpoints
+### 高级功能
+- **Refill Core**: 特殊的关节序列动画
+- **O7专用动画**: 波纹动画、指尖舞蹈、指挥家等
+- **六手依次动画**: 支持多手部协调动画
+- **设备类型检测**: 自动检测和适配设备类型
 
-### Hand Type Configuration
+## 📋 系统要求
 
-* `POST /api/hand-type`
+- Go 1.16+
+- 现代浏览器（Chrome、Firefox、Safari、Edge）
+- CAN总线接口
+- Linux系统（用于CAN接口配置）
 
-Configure the hand type for a specified interface.
+## 🛠️ 安装和配置
 
-### Finger Pose
-
-* `POST /api/fingers`
-
-Send finger pose data.
-
-### Palm Pose
-
-* `POST /api/palm`
-
-Send palm pose data.
-
-### Preset Gestures
-
-* `POST /api/preset/{pose}`
-
-Execute predefined gestures.
-
-### Animation Control
-
-* `POST /api/animation`
-
-Start or stop animations.
-
-### Sensor Data
-
-* `GET /api/sensors`
-
-Retrieve real-time sensor data for a specified interface or all interfaces.
-
-### System Status
-
-* `GET /api/status`
-
-Query the overall system status, CAN service status, and interface configuration.
-
-### Available Interfaces
-
-* `GET /api/interfaces`
-
-List currently available CAN interfaces.
-
-### Hand Configuration Query
-
-* `GET /api/hand-configs`
-
-Query the hand configuration for all interfaces.
-
-### Health Check
-
-* `GET /api/health`
-
-System health check endpoint.
-
-## Configuration Options
-
-Configuration via command-line arguments or environment variables:
-
-* `CAN_SERVICE_URL` or `-can-url`: URL for the CAN service.
-* `WEB_PORT` or `-port`: Web service port.
-* `DEFAULT_INTERFACE` or `-interface`: Default CAN interface.
-* `CAN_INTERFACES` or `-can-interfaces`: List of available CAN interfaces.
-
-## Usage Examples
-
+### 1. 克隆项目
 ```bash
-./control-service -can-interfaces can0,can1,vcan0
-CAN_INTERFACES=can0,can1 ./control-service
+git clone <repository-url>
+cd dexterous-hand-dashboard
 ```
 
-## System Requirements
-
-* Golang environment (1.20+)
-* CAN communication service
-
-## Starting the Service
-
-Launch the control service:
-
+### 2. 安装依赖
 ```bash
-go run main.go -can-url http://localhost:8080 -port 9099
+go mod tidy
 ```
 
-## Logging and Monitoring
+### 3. 配置CAN接口
+```bash
+# 启动CAN接口
+sudo ip link set can0 up type can bitrate 1000000
+sudo ip link set can1 up type can bitrate 1000000
+```
 
-Detailed logs include interface status, gesture execution, and error messages for quick troubleshooting and diagnostics.
+### 4. 启动服务
+```bash
+# 基本启动
+go run main.go
 
-## Contribution Guidelines
+# 指定CAN服务URL
+go run main.go -can-url http://192.168.1.100:8080
 
-Community developers are welcome to contribute code, report bugs, or suggest features.
+# 指定端口和接口
+go run main.go -port 9099 -interface can0 -can-interfaces can0,can1
 
-## License
+# 指定设备类型
+go run main.go -device-type O7
+```
 
-This project is open-sourced under the GPL-3.0 license.
+## ⚙️ 配置参数
+
+### 命令行参数
+- `-can-url`: CAN服务URL（默认: http://192.168.128.35:5260）
+- `-port`: Web服务端口（默认: 9099）
+- `-interface`: 默认CAN接口
+- `-can-interfaces`: 支持的CAN接口列表（逗号分隔）
+- `-device-type`: 设备类型（L10或O7）
+
+### 环境变量
+- `CAN_SERVICE_URL`: CAN服务URL
+- `WEB_PORT`: Web服务端口
+- `DEFAULT_INTERFACE`: 默认CAN接口
+- `CAN_INTERFACES`: 支持的CAN接口列表
+- `DEVICE_TYPE`: 设备类型
+
+## 🎮 使用指南
+
+### 基本操作
+
+1. **启动控制面板**
+   - 访问 `http://localhost:9099`
+   - 等待系统初始化完成
+
+2. **配置手部**
+   - 在"手部配置管理"区域选择要启用的手部
+   - 设置每个手部的接口和手型（左手/右手）
+   - 检查连接状态
+
+3. **设备类型设置**
+   - 使用设备类型选择器切换L10/O7模式
+   - 或使用"自动检测"功能自动识别设备类型
+
+### 关节控制
+
+#### L10设备（6关节）
+- **关节1-5**: 手指关节控制
+- **掌部控制**: 独立的掌部关节控制面板
+
+#### O7设备（7关节）
+- **关节1-7**: 7个独立关节控制
+- **速度控制**: 每个关节的独立速度控制
+- **专用动画**: O7设备特有的动画效果
+
+### 预设姿势
+
+#### 基础手势
+- **握拳**: 完全闭合状态
+- **张开**: 完全张开状态
+- **捏取**: 拇指和食指捏取姿势
+- **食指指点**: 伸出食指指点
+- **竖起大拇指**: 竖起大拇指手势
+
+#### 数字手势
+- **1-9**: 对应的数字手势
+- **自动演示**: 依次展示所有数字手势
+
+#### 特殊手势
+- **Yeah**: 胜利手势
+- **Yo**: 打招呼手势
+- **PONG**: 手枪手势
+- **OK**: OK手势
+
+### 动画控制
+
+#### 基础动画
+- **波浪动画**: 手指依次张开闭合
+- **横向摆动**: 掌部左右摆动
+
+#### O7专用动画
+- **波纹动画**: 关节依次激活
+- **指尖舞蹈**: 复杂的关节协调动作
+- **指挥家**: 模拟指挥动作
+- **手指波浪**: 7关节波浪效果
+
+### 高级功能
+
+#### Refill Core
+- **L10模式**: 掌部和手指协调动作序列
+- **O7模式**: 7关节依次激活序列
+
+#### 六手依次动画
+- **墨西哥波浪**: 多手部协调波浪
+- **数字倒计时**: 多手部数字展示
+- **双向波浪**: 正向和反向波浪
+
+## 🔧 API接口
+
+### 基础接口
+- `GET /api/health`: 健康检查
+- `GET /api/status`: 系统状态
+- `GET /api/interfaces`: 可用接口列表
+- `GET /api/device-type`: 设备类型信息
+
+### 控制接口
+- `POST /api/fingers`: 发送手指姿态
+- `POST /api/palm`: 发送掌部姿态
+- `POST /api/speeds`: 发送关节速度（O7）
+- `POST /api/animation`: 控制动画
+- `POST /api/preset/{pose}`: 设置预设姿势
+
+### 配置接口
+- `POST /api/hand-type`: 设置手型配置
+- `GET /api/hand-configs`: 获取手型配置
+- `GET /api/sensors`: 获取传感器数据
+
+## 🐛 故障排除
+
+### 常见问题
+
+1. **CAN服务连接失败**
+   - 检查CAN服务是否运行
+   - 验证网络连接和URL配置
+   - 确认CAN接口已正确配置
+
+2. **设备类型检测失败**
+   - 确保手部已启用并连接
+   - 手动选择正确的设备类型
+   - 检查设备固件版本
+
+3. **控制命令无响应**
+   - 检查手部连接状态
+   - 验证CAN ID配置
+   - 确认设备类型设置正确
+
+4. **动画效果异常**
+   - 检查设备类型是否匹配
+   - 验证关节数量设置
+   - 确认动画参数合理
+
+### 调试功能
+
+- **系统调试**: 点击"🔍 系统调试"按钮
+- **状态监控**: 查看实时状态日志
+- **网络检查**: 自动检测网络连接状态
+
+## 📝 更新日志
+
+### v2.0.0 (当前版本)
+- ✨ 新增O7设备支持
+- ✨ 添加7关节控制功能
+- ✨ 实现设备类型自动检测
+- ✨ 新增O7专用动画效果
+- ✨ 添加关节速度控制
+- ✨ 优化左右手切换逻辑
+- ✨ 改进设备类型显示
+- 🐛 修复手型配置同步问题
+- 🐛 修复设备类型检测逻辑
+
+### v1.0.0
+- ✨ 基础L10设备支持
+- ✨ 6关节控制功能
+- ✨ 预设姿势系统
+- ✨ 基础动画效果
+- ✨ 多手部支持
+
+## 🤝 贡献指南
+
+欢迎提交Issue和Pull Request来改进这个项目！
+
+## 📄 许可证
+
+本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 📞 支持
+
+如有问题或建议，请通过以下方式联系：
+- 提交GitHub Issue
+- 发送邮件至项目维护者
+
+---
+
+**注意**: 使用前请确保已正确配置CAN接口和网络连接。建议在测试环境中先验证功能正常后再部署到生产环境。

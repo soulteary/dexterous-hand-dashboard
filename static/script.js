@@ -7,6 +7,13 @@ let handTypeIds = {
     'right': 0x27   // HAND_TYPE_RIGHT
 };
 
+// O7_MODIFIED: 设备类型变量
+let currentDeviceType = "L10"; // 默认设备类型
+const DEVICE_TYPE = {
+    L10: "L10",
+    O7: "O7"
+};
+
 // 主要控制模块
 const LinkerHandController = {
     // 常量定义
@@ -21,6 +28,11 @@ const LinkerHandController = {
             LEFT: 48,       // 左侧
             RIGHT: 208      // 右侧
         },
+        SPEED: {           // O7_MODIFIED: 添加速度默认值
+            DEFAULT: 100,   // 默认速度值
+            MIN: 0,         // 最小速度
+            MAX: 255        // 最大速度
+        },
         ANIMATION: {
             DEFAULT_SPEED: 500 // 默认动画速度
         }
@@ -28,52 +40,89 @@ const LinkerHandController = {
 
     // 预设姿势配置
     PRESETS: {
-        FIST: [64, 64, 64, 64, 64, 64],          // 握拳
-        OPEN: [192, 192, 192, 192, 192, 192],    // 张开
-        THUMBSUP: [255, 255, 0, 0, 0, 0],        // 竖起大拇指
-        POINT: [0, 0, 255, 0, 0, 0],             // 食指指点
-        YO: [255, 255, 255, 0, 0, 255],          // Yo!
-        GUN: [255, 255, 255, 255, 0, 0],         // PONG!
-        WAVE: [40, 60, 80, 100, 120, 140],       // 波浪形
-        PALM_LEFT: [48, 48, 48, 48],             // 掌部左移
-        PALM_RIGHT: [208, 208, 208, 208],        // 掌部右移
-        PALM_NEUTRAL: [128, 128, 128, 128],      // 掌部中立
-        PALM_GUN: [0, 0, 0, 128],                // 掌部 GUN
+        // L10预设 (6关节)
+        L10: {
+            FIST: [64, 64, 64, 64, 64, 64],          // 握拳
+            OPEN: [192, 192, 192, 192, 192, 192],    // 张开
+            THUMBSUP: [255, 255, 0, 0, 0, 0],        // 竖起大拇指
+            POINT: [0, 0, 255, 0, 0, 0],             // 食指指点
+            YO: [255, 255, 255, 0, 0, 255],          // Yo!
+            GUN: [255, 255, 255, 255, 0, 0],         // PONG!
+            WAVE: [40, 60, 80, 100, 120, 140],       // 波浪形
+            PALM_LEFT: [48, 48, 48, 48],             // 掌部左移
+            PALM_RIGHT: [208, 208, 208, 208],        // 掌部右移
+            PALM_NEUTRAL: [128, 128, 128, 128],      // 掌部中立
+            PALM_GUN: [0, 0, 0, 128],                // 掌部 GUN
+            PINCH: [114, 63, 136, 0, 0, 0],          // 捏取姿势
+            PALM_PINCH: [255, 163, 255, 127],
+            OK: [124, 31, 132, 255, 255, 255],
+            PALM_OK: [255, 163, 255, 127],
+            BIG_FIST: [49, 32, 40, 36, 41, 46],      // 大握拳
+            PALM_BIG_FIST: [255, 235, 128, 128],     // 大握拳掌部
+            BIG_OPEN: [255, 255, 255, 255, 255, 255], // 大张开
+            PALM_BIG_OPEN: [128, 128, 128, 128],      // 大张开掌部
+            YEAH: [0, 103, 255, 255, 0, 0],          // Yeah!
+            PALM_YEAH: [255, 235, 128, 128],         // Yeah!掌部
+            // 数字手势预设
+            ONE: [0, 57, 255, 0, 0, 0],
+            PALM_ONE: [255, 109, 255, 118],
+            TWO: [0, 57, 255, 255, 0, 0],
+            PALM_TWO: [255, 109, 255, 118],
+            THREE: [0, 57, 255, 255, 255, 0],
+            PALM_THREE: [255, 109, 255, 118],
+            FOUR: [0, 57, 255, 255, 255, 255],
+            PALM_FOUR: [255, 109, 255, 118],
+            FIVE: [255, 255, 255, 255, 255, 255],
+            PALM_FIVE: [255, 109, 255, 118],
+            SIX: [255, 255, 0, 0, 0, 255],
+            PALM_SIX: [255, 255, 255, 255],
+            SEVEN: [110, 137, 130, 109, 0, 0],
+            PALM_SEVEN: [255, 200, 199, 76],
+            EIGHT: [216, 240, 255, 36, 41, 46],
+            PALM_EIGHT: [106, 200, 199, 76],
+            NINE: [0, 255, 159, 0, 0, 0],
+            PALM_NINE: [255, 38, 195, 51]
+        },
+        
+        // O7_MODIFIED: O7预设 (7关节)
+        O7: {
+            FIST: [64, 64, 64, 64, 64, 64, 64],          // 握拳
+            OPEN: [192, 192, 192, 192, 192, 192, 192],   // 张开
+            THUMBSUP: [255, 255, 0, 0, 0, 0, 128],       // 竖起大拇指
+            POINT: [0, 0, 255, 0, 0, 0, 128],            // 食指指点
+            YO: [255, 255, 255, 0, 0, 255, 128],         // Yo!
+            GUN: [255, 255, 255, 255, 0, 0, 128],        // PONG!
+            WAVE: [40, 60, 80, 100, 120, 140, 128],      // 波浪形
+            PALM_NEUTRAL: [128, 128, 128, 128],          // 掌部映射
+            PINCH: [114, 63, 136, 0, 0, 0, 128],         // 捏取姿势
+            OK: [124, 31, 132, 255, 255, 255, 128],
+            BIG_FIST: [49, 32, 40, 36, 41, 46, 128],     // 大握拳
+            BIG_OPEN: [255, 255, 255, 255, 255, 255, 255], // 大张开
+            YEAH: [0, 103, 255, 255, 0, 0, 128],         // Yeah!
+            // 数字手势预设
+            ONE: [0, 57, 255, 0, 0, 0, 128],
+            TWO: [0, 57, 255, 255, 0, 0, 128],
+            THREE: [0, 57, 255, 255, 255, 0, 128],
+            FOUR: [0, 57, 255, 255, 255, 255, 128],
+            FIVE: [255, 255, 255, 255, 255, 255, 128],
+            SIX: [255, 255, 0, 0, 0, 255, 128],
+            SEVEN: [110, 137, 130, 109, 0, 0, 128],
+            EIGHT: [216, 240, 255, 36, 41, 46, 128],
+            NINE: [0, 255, 159, 0, 0, 0, 128]
+        },
+        
+        // 默认速度预设 - 所有关节速度相同
+        SPEEDS: {
+            SLOW: [50, 50, 50, 50, 50, 50, 50],         // 慢速
+            MEDIUM: [120, 120, 120, 120, 120, 120, 120], // 中速
+            FAST: [200, 200, 200, 200, 200, 200, 200],   // 快速
+            MIXED: [50, 100, 150, 200, 150, 100, 50]     // 混合速度
+        }
+    },
 
-        PINCH: [114, 63, 136, 0, 0, 0],          // 捏取姿势
-        PALM_PINCH: [255, 163, 255, 127],
-
-        OK: [124, 31, 132, 255, 255, 255],
-        PALM_OK: [255, 163, 255, 127],
-
-        BIG_FIST: [49, 32, 40, 36, 41, 46],      // 大握拳
-        PALM_BIG_FIST: [255, 235, 128, 128],     // 大握拳掌部
-
-        BIG_OPEN: [255, 255, 255, 255, 255, 255], // 大张开
-        PALM_BIG_OPEN: [128, 128, 128, 128],      // 大张开掌部
-
-        YEAH: [0, 103, 255, 255, 0, 0],          // Yeah!
-        PALM_YEAH: [255, 235, 128, 128],         // Yeah!掌部
-
-        // 数字手势预设
-        ONE: [0, 57, 255, 0, 0, 0],
-        PALM_ONE: [255, 109, 255, 118],
-        TWO: [0, 57, 255, 255, 0, 0],
-        PALM_TWO: [255, 109, 255, 118],
-        THREE: [0, 57, 255, 255, 255, 0],
-        PALM_THREE: [255, 109, 255, 118],
-        FOUR: [0, 57, 255, 255, 255, 255],
-        PALM_FOUR: [255, 109, 255, 118],
-        FIVE: [255, 255, 255, 255, 255, 255],
-        PALM_FIVE: [255, 109, 255, 118],
-        SIX: [255, 255, 0, 0, 0, 255],
-        PALM_SIX: [255, 255, 255, 255],
-        SEVEN: [110, 137, 130, 109, 0, 0],
-        PALM_SEVEN: [255, 200, 199, 76],
-        EIGHT: [216, 240, 255, 36, 41, 46],
-        PALM_EIGHT: [106, 200, 199, 76],
-        NINE: [0, 255, 159, 0, 0, 0],
-        PALM_NINE: [255, 38, 195, 51]
+    // O7_MODIFIED: 获取当前设备类型对应的预设
+    getCurrentPresets: function() {
+        return this.PRESETS[currentDeviceType];
     },
 
     // 防抖函数
@@ -87,8 +136,12 @@ const LinkerHandController = {
 
     // 初始化滑块显示与实时控制发送（带防抖）
     initSliderDisplays: function () {
-        const fingerSliders = Array.from({ length: 6 }, (_, i) => document.getElementById(`finger${i}`));
+        // O7_MODIFIED: 根据设备类型确定关节数量
+        const fingerCount = currentDeviceType === DEVICE_TYPE.O7 ? 7 : 6;
+        
+        const fingerSliders = Array.from({ length: fingerCount }, (_, i) => document.getElementById(`finger${i}`));
         const palmSliders = Array.from({ length: 4 }, (_, i) => document.getElementById(`palm${i}`));
+        const speedSliders = Array.from({ length: 7 }, (_, i) => document.getElementById(`speed${i}`));
         const delayDefault = 30;
 
         const updateFingerPose = this.debounce(() => {
@@ -100,35 +153,79 @@ const LinkerHandController = {
             const pose = this.getPalmPoseValues();
             this.sendPalmPoseToAll(pose);
         }, delayDefault);
+        
+        // O7_MODIFIED: 添加关节速度控制
+        const updateSpeeds = this.debounce(() => {
+            if (currentDeviceType === DEVICE_TYPE.O7) {
+                const speeds = this.getSpeedValues();
+                this.sendSpeedsToAll(speeds);
+            }
+        }, delayDefault);
 
         // 初始化手指滑块监听器
         fingerSliders.forEach((slider, i) => {
-            slider.addEventListener('input', () => {
-                document.getElementById(`finger${i}-value`).textContent = slider.value;
-                updateFingerPose();
-            });
+            if (slider) {
+                slider.addEventListener('input', () => {
+                    const valueDisplay = document.getElementById(`finger${i}-value`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = slider.value;
+                    }
+                    updateFingerPose();
+                });
+            }
         });
 
         // 初始化掌部滑块监听器
         palmSliders.forEach((slider, i) => {
-            slider.addEventListener('input', () => {
-                document.getElementById(`palm${i}-value`).textContent = slider.value;
-                updatePalmPose();
-            });
+            if (slider) {
+                slider.addEventListener('input', () => {
+                    const valueDisplay = document.getElementById(`palm${i}-value`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = slider.value;
+                    }
+                    updatePalmPose();
+                });
+            }
+        });
+        
+        // O7_MODIFIED: 初始化速度滑块监听器
+        speedSliders.forEach((slider, i) => {
+            if (slider) {
+                slider.addEventListener('input', () => {
+                    const valueDisplay = document.getElementById(`speed${i}-value`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = slider.value;
+                    }
+                    updateSpeeds();
+                });
+            }
         });
 
         // 动画速度滑块更新
         const animationSlider = document.getElementById('animation-speed');
-        animationSlider.addEventListener('input', function () {
-            document.getElementById('speed-value').textContent = this.value;
-        });
+        if (animationSlider) {
+            animationSlider.addEventListener('input', function () {
+                const speedValue = document.getElementById('speed-value');
+                if (speedValue) {
+                    speedValue.textContent = this.value;
+                }
+            });
+        }
     },
 
     // 获取手指姿态值
     getFingerPoseValues: function () {
         const pose = [];
-        for (let i = 0; i < 6; i++) {
-            pose.push(parseInt(document.getElementById(`finger${i}`).value));
+        // O7_MODIFIED: 根据设备类型获取不同数量的关节值
+        const fingerCount = currentDeviceType === DEVICE_TYPE.O7 ? 7 : 6;
+        
+        for (let i = 0; i < fingerCount; i++) {
+            const slider = document.getElementById(`finger${i}`);
+            if (slider) {
+                pose.push(parseInt(slider.value));
+            } else {
+                pose.push(128); // 默认中间值
+            }
         }
         return pose;
     },
@@ -137,26 +234,52 @@ const LinkerHandController = {
     getPalmPoseValues: function () {
         const pose = [];
         for (let i = 0; i < 4; i++) {
-            pose.push(parseInt(document.getElementById(`palm${i}`).value));
+            const slider = document.getElementById(`palm${i}`);
+            if (slider) {
+                pose.push(parseInt(slider.value));
+            } else {
+                pose.push(128); // 默认中间值
+            }
         }
         return pose;
     },
 
     // 设置手指滑块值
     applyFingerPreset: function (values) {
-        if (!Array.isArray(values) || values.length !== 6) {
+        // O7_MODIFIED: 支持O7设备7关节和L10设备6关节
+        if (!Array.isArray(values)) {
             logMessage('error', '无效的手指预设值');
             return;
         }
-
-        // 设置滑块值
-        for (let i = 0; i < 6; i++) {
-            const slider = document.getElementById(`finger${i}`);
-            slider.value = values[i];
-            document.getElementById(`finger${i}-value`).textContent = values[i];
+        
+        // 确定要处理的关节数量
+        const jointCount = currentDeviceType === DEVICE_TYPE.O7 ? 7 : 6;
+        
+        // 验证数据长度
+        if (values.length !== jointCount) {
+            logMessage('warning', `预设值长度 (${values.length}) 与设备类型 ${currentDeviceType} 的关节数 (${jointCount}) 不匹配`);
+            // 如果O7设备收到6值的预设，自动补充第7个关节值
+            if (currentDeviceType === DEVICE_TYPE.O7 && values.length === 6) {
+                values = [...values, 128]; // 添加第7个关节的默认值
+                logMessage('info', '已自动添加第7个关节的默认值 (128)');
+            } else {
+                return;
+            }
         }
 
-        logMessage('info', '已应用手指预设姿势');
+        // 设置滑块值
+        for (let i = 0; i < jointCount; i++) {
+            const slider = document.getElementById(`finger${i}`);
+            if (slider) {
+                slider.value = values[i];
+                const valueDisplay = document.getElementById(`finger${i}-value`);
+                if (valueDisplay) {
+                    valueDisplay.textContent = values[i];
+                }
+            }
+        }
+
+        logMessage('info', `已应用 ${currentDeviceType} 设备的手指预设姿势`);
     },
 
     // 设置掌部滑块值
@@ -189,6 +312,7 @@ const LinkerHandController = {
         enabledHands.forEach(async (config) => {
             await sendFingerPoseToHand(config, pose);
         });
+        console.log(pose);
     },
 
     // 发送掌部姿态到所有启用手部
@@ -263,17 +387,104 @@ const LinkerHandController = {
             <td style="filter:blur(10px)"><progress value="${value}" max="100"></progress></td>
             <td style="filter:blur(10px)">${value}%</td>
         </tr>`;
-    }
+    },
+
+    // O7_MODIFIED: 获取速度值
+    getSpeedValues: function () {
+        const speeds = [];
+        // O7设备需要7个关节的速度值
+        const jointCount = currentDeviceType === DEVICE_TYPE.O7 ? 7 : 5;
+        
+        for (let i = 0; i < jointCount; i++) {
+            const slider = document.getElementById(`speed${i}`);
+            if (slider) {
+                speeds.push(parseInt(slider.value));
+            } else {
+                speeds.push(100); // 默认速度
+            }
+        }
+        return speeds;
+    },
+    
+    // O7_MODIFIED: 设置速度滑块值
+    applySpeedPreset: function (values) {
+        if (!Array.isArray(values)) {
+            logMessage('error', '无效的速度预设值');
+            return;
+        }
+        
+        const jointCount = currentDeviceType === DEVICE_TYPE.O7 ? 7 : 5;
+        
+        if (values.length < jointCount) {
+            logMessage('error', `速度预设值长度不足，需要${jointCount}个值`);
+            return;
+        }
+
+        // 设置滑块值
+        for (let i = 0; i < jointCount; i++) {
+            const slider = document.getElementById(`speed${i}`);
+            if (slider) {
+                slider.value = values[i];
+                const valueDisplay = document.getElementById(`speed${i}-value`);
+                if (valueDisplay) {
+                    valueDisplay.textContent = values[i];
+                }
+            }
+        }
+
+        logMessage('info', '已应用关节速度预设');
+    },
+
+    // O7_MODIFIED: 发送速度到所有启用手部
+    sendSpeedsToAll: function (speeds) {
+        if (currentDeviceType !== DEVICE_TYPE.O7) {
+            logMessage('warning', '速度控制仅适用于O7设备');
+            return;
+        }
+        
+        const enabledHands = getEnabledHands();
+        if (enabledHands.length === 0) {
+            logMessage('error', '没有启用的手部');
+            return;
+        }
+
+        logMessage('info', `发送关节速度到 ${enabledHands.length} 个启用的手部: [${speeds.join(', ')}]`);
+
+        enabledHands.forEach(async (config) => {
+            await sendSpeedsToHand(config, speeds);
+        });
+    },
 };
 
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', function() {
+    // 添加高亮效果的CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        .highlight {
+            animation: highlight-animation 1s ease;
+        }
+        
+        @keyframes highlight-animation {
+            0% { color: inherit; }
+            50% { color: #e74c3c; font-weight: bold; }
+            100% { color: inherit; }
+        }
+    `;
+    document.head.appendChild(style);
+    
     initializeSystem();
     setupEventListeners();
     setupSliderEvents();
     LinkerHandController.initSliderDisplays();
     LinkerHandController.startSensorDataPolling();
     startStatusUpdater();
+    
+    // 添加设备检测按钮事件
+    const detectButton = document.getElementById('detect-device-type');
+    if (detectButton) {
+        detectButton.addEventListener('click', detectDeviceType);
+    }
 });
 
 // 初始化系统 - 添加更详细的错误处理和调试
@@ -733,6 +944,12 @@ function setupEventListeners() {
     document.getElementById('send-all-palm-poses').addEventListener('click', sendAllPalmPoses);
     document.getElementById('reset-all-hands').addEventListener('click', resetAllHands);
     document.getElementById('stop-all-animations').addEventListener('click', stopAllAnimations);
+    
+    // O7_MODIFIED: 添加速度控制按钮事件
+    const speedButton = document.getElementById('send-all-speeds');
+    if (speedButton) {
+        speedButton.addEventListener('click', sendAllSpeeds);
+    }
 
     // 动画按钮
     document.getElementById('start-wave').addEventListener('click', () => startAnimationForAll('wave'));
@@ -747,6 +964,183 @@ function setupEventListeners() {
 
     // Refill core 按钮
     setupRefillCore();
+    
+    // O7_MODIFIED: 添加设备类型切换事件
+    const deviceTypeSelector = document.getElementById('device-type');
+    if (deviceTypeSelector) {
+        deviceTypeSelector.addEventListener('change', function() {
+            switchDeviceType(this.value);
+        });
+        
+        // 初始化时获取设备类型
+        fetchDeviceType();
+    }
+}
+
+// O7_MODIFIED: 切换设备类型
+function switchDeviceType(deviceType) {
+    if (deviceType !== DEVICE_TYPE.L10 && deviceType !== DEVICE_TYPE.O7) {
+        logMessage('error', `无效的设备类型: ${deviceType}`);
+        return;
+    }
+    
+    const oldDeviceType = currentDeviceType;
+    currentDeviceType = deviceType;
+    
+    // 更新页面显示
+    document.getElementById('device-type-display').textContent = deviceType;
+    document.getElementById('current-device-type').textContent = deviceType;
+    
+    // 根据设备类型调整UI
+    updateUIForDeviceType(deviceType);
+    
+    logMessage('info', `设备类型已切换: ${oldDeviceType} → ${deviceType}`);
+    
+    // 通知服务器
+    updateServerDeviceType(deviceType);
+}
+
+// O7_MODIFIED: 更新设备类型UI
+function updateUIForDeviceType(deviceType) {
+    // 1. 关节7控制
+    const finger6Container = document.getElementById('finger6-container');
+    if (finger6Container) {
+        finger6Container.style.display = deviceType === DEVICE_TYPE.O7 ? 'block' : 'none';
+    }
+    
+    // 2. 掌部控制和速度控制面板
+    const palmControlPanel = document.getElementById('palm-control-panel');
+    const speedControlPanel = document.getElementById('speed-control-panel');
+    
+    if (palmControlPanel) {
+        palmControlPanel.style.display = deviceType === DEVICE_TYPE.L10 ? 'block' : 'none';
+    }
+    
+    if (speedControlPanel) {
+        speedControlPanel.style.display = deviceType === DEVICE_TYPE.O7 ? 'block' : 'none';
+    }
+    
+    // 3. 速度控制按钮
+    const speedButton = document.getElementById('send-all-speeds');
+    if (speedButton) {
+        speedButton.style.display = deviceType === DEVICE_TYPE.O7 ? 'inline-block' : 'none';
+    }
+    
+    // 4. O7设备特有动画面板
+    const o7AnimationPanel = document.getElementById('o7-animation-panel');
+    if (o7AnimationPanel) {
+        o7AnimationPanel.style.display = deviceType === DEVICE_TYPE.O7 ? 'block' : 'none';
+    }
+    
+    // 5. 设备类型标签
+    const deviceTypeElements = document.querySelectorAll('[data-device-type]');
+    deviceTypeElements.forEach(element => {
+        if (element.dataset.deviceType === deviceType) {
+            element.style.display = 'inline-block';
+        } else {
+            element.style.display = 'none';
+        }
+    });
+    
+    // 6. 在切换设备类型时添加特殊效果
+    const deviceTypeDisplay = document.getElementById('device-type-display');
+    if (deviceTypeDisplay) {
+        // 添加过渡动画效果
+        deviceTypeDisplay.classList.add('highlight');
+        setTimeout(() => {
+            deviceTypeDisplay.classList.remove('highlight');
+        }, 1000);
+    }
+    
+    // 7. 重置预设
+    resetAllPresets();
+    
+    // 8. 更新日志
+    logMessage('info', `UI已更新为${deviceType}设备模式`);
+}
+
+// O7_MODIFIED: 获取服务器设备类型
+function fetchDeviceType() {
+    fetch('/api/device-type')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.data && data.data.deviceType) {
+                const deviceType = data.data.deviceType;
+                // 更新下拉框
+                const selector = document.getElementById('device-type');
+                if (selector) {
+                    selector.value = deviceType;
+                }
+                // 切换设备类型
+                switchDeviceType(deviceType);
+                
+                logMessage('info', `从服务器获取设备类型: ${deviceType}`);
+            }
+        })
+        .catch(error => {
+            logMessage('error', `获取设备类型失败: ${error.message}`);
+        });
+}
+
+// O7_MODIFIED: 更新服务器设备类型
+function updateServerDeviceType(deviceType) {
+    // 为所有启用的手部更新设备类型
+    const enabledHands = getEnabledHands();
+    if (enabledHands.length === 0) {
+        logMessage('warning', '没有启用的手部，无法更新设备类型');
+        return;
+    }
+    
+    // 这里我们使用第一个启用的手部发送更新
+    const config = enabledHands[0];
+    
+    // 发送姿态请求，包含设备类型参数
+    fetch('/api/fingers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            interface: config.interface,
+            pose: LinkerHandController.getFingerPoseValues(),
+            handType: config.handType,
+            handId: handTypeIds[config.handType],
+            deviceType: deviceType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            logMessage('success', `服务器设备类型已更新为: ${deviceType}`);
+        } else {
+            logMessage('error', `更新设备类型失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        logMessage('error', `更新设备类型请求失败: ${error.message}`);
+    });
+}
+
+// O7_MODIFIED: 重置所有预设
+function resetAllPresets() {
+    const presets = LinkerHandController.getCurrentPresets();
+    if (!presets) {
+        logMessage('error', `无法找到设备 ${currentDeviceType} 的预设`);
+        return;
+    }
+    
+    // 重置关节位置
+    if (presets.OPEN) {
+        LinkerHandController.applyFingerPreset(presets.OPEN);
+    }
+    
+    // 重置掌部/速度
+    if (currentDeviceType === DEVICE_TYPE.L10) {
+        if (presets.PALM_NEUTRAL) {
+            LinkerHandController.applyPalmPreset(presets.PALM_NEUTRAL);
+        }
+    } else {
+        // 对于O7，应用默认速度
+        LinkerHandController.applySpeedPreset(LinkerHandController.PRESETS.SPEEDS.MEDIUM);
+    }
 }
 
 // 设置预设按钮
@@ -754,7 +1148,7 @@ function setupPresetButtons() {
     const delayDefault = 30;
 
     // 基础预设姿势
-    const presets = {
+    const presetMap = {
         'pose-fist': { finger: 'FIST', palm: null },
         'pose-open': { finger: 'OPEN', palm: null },
         'pose-pinch': { finger: 'PINCH', palm: 'PALM_PINCH' },
@@ -769,108 +1163,193 @@ function setupPresetButtons() {
         'pose-ok': { finger: 'OK', palm: 'PALM_OK' }
     };
 
-    Object.entries(presets).forEach(([id, preset]) => {
+    Object.entries(presetMap).forEach(([id, preset]) => {
         const button = document.getElementById(id);
         if (button) {
             button.addEventListener('click', () => {
-                if (preset.palm) {
-                    LinkerHandController.applyPalmPreset(LinkerHandController.PRESETS[preset.palm]);
-                    const palmPose = LinkerHandController.getPalmPoseValues();
-                    LinkerHandController.sendPalmPoseToAll(palmPose);
-                    
-                    setTimeout(() => {
-                        LinkerHandController.applyFingerPreset(LinkerHandController.PRESETS[preset.finger]);
+                // O7_MODIFIED: 获取当前设备类型的预设
+                const presets = LinkerHandController.getCurrentPresets();
+                if (!presets) {
+                    logMessage('error', `无法找到设备 ${currentDeviceType} 的预设`);
+                    return;
+                }
+                
+                // 适配不同设备类型的掌部控制
+                if (currentDeviceType === DEVICE_TYPE.O7) {
+                    // O7设备使用关节位置指令，不使用掌部姿态
+                    if (presets[preset.finger]) {
+                        LinkerHandController.applyFingerPreset(presets[preset.finger]);
                         const fingerPose = LinkerHandController.getFingerPoseValues();
                         LinkerHandController.sendFingerPoseToAll(fingerPose);
-                    }, delayDefault);
+                    }
                 } else {
-                    LinkerHandController.applyFingerPreset(LinkerHandController.PRESETS[preset.finger]);
-                    const fingerPose = LinkerHandController.getFingerPoseValues();
-                    LinkerHandController.sendFingerPoseToAll(fingerPose);
+                    // L10设备使用分离的掌部控制
+                    if (preset.palm && presets[preset.palm]) {
+                        LinkerHandController.applyPalmPreset(presets[preset.palm]);
+                        const palmPose = LinkerHandController.getPalmPoseValues();
+                        LinkerHandController.sendPalmPoseToAll(palmPose);
+                        
+                        setTimeout(() => {
+                            if (presets[preset.finger]) {
+                                LinkerHandController.applyFingerPreset(presets[preset.finger]);
+                                const fingerPose = LinkerHandController.getFingerPoseValues();
+                                LinkerHandController.sendFingerPoseToAll(fingerPose);
+                            }
+                        }, delayDefault);
+                    } else if (presets[preset.finger]) {
+                        LinkerHandController.applyFingerPreset(presets[preset.finger]);
+                        const fingerPose = LinkerHandController.getFingerPoseValues();
+                        LinkerHandController.sendFingerPoseToAll(fingerPose);
+                    }
                 }
             });
         }
     });
 }
 
-// 设置数字预设
+// 设置数字手势预设
 function setupNumericPresets() {
     const delayDefault = 30;
 
-    // 数字1-9的预设
-    for (let i = 1; i <= 9; i++) {
-        const button = document.getElementById(`pose-${i}`);
+    // 数字手势
+    for (let num = 1; num <= 9; num++) {
+        const button = document.getElementById(`pose-${num}`);
         if (button) {
             button.addEventListener('click', () => {
-                const palmPreset = LinkerHandController.PRESETS[`PALM_${getNumberName(i)}`];
-                const fingerPreset = LinkerHandController.PRESETS[getNumberName(i)];
-
-                if (palmPreset) {
-                    LinkerHandController.applyPalmPreset(palmPreset);
-                    const palmPose = LinkerHandController.getPalmPoseValues();
-                    LinkerHandController.sendPalmPoseToAll(palmPose);
+                // O7_MODIFIED: 获取当前设备类型的预设
+                const presets = LinkerHandController.getCurrentPresets();
+                if (!presets) {
+                    logMessage('error', `无法找到设备 ${currentDeviceType} 的预设`);
+                    return;
                 }
-
-                setTimeout(() => {
-                    if (fingerPreset) {
-                        LinkerHandController.applyFingerPreset(fingerPreset);
+                
+                const fingerPreset = `${['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'][num - 1]}`;
+                
+                if (currentDeviceType === DEVICE_TYPE.O7) {
+                    // O7设备使用单个关节位置指令
+                    if (presets[fingerPreset]) {
+                        LinkerHandController.applyFingerPreset(presets[fingerPreset]);
                         const fingerPose = LinkerHandController.getFingerPoseValues();
                         LinkerHandController.sendFingerPoseToAll(fingerPose);
                     }
-                }, delayDefault);
+                } else {
+                    // L10设备使用分离的掌部控制
+                    const palmPreset = `PALM_${fingerPreset}`;
+                    
+                    if (presets[palmPreset]) {
+                        LinkerHandController.applyPalmPreset(presets[palmPreset]);
+                        const palmPose = LinkerHandController.getPalmPoseValues();
+                        LinkerHandController.sendPalmPoseToAll(palmPose);
+                        
+                        setTimeout(() => {
+                            if (presets[fingerPreset]) {
+                                LinkerHandController.applyFingerPreset(presets[fingerPreset]);
+                                const fingerPose = LinkerHandController.getFingerPoseValues();
+                                LinkerHandController.sendFingerPoseToAll(fingerPose);
+                            }
+                        }, delayDefault);
+                    } else if (presets[fingerPreset]) {
+                        LinkerHandController.applyFingerPreset(presets[fingerPreset]);
+                        const fingerPose = LinkerHandController.getFingerPoseValues();
+                        LinkerHandController.sendFingerPoseToAll(fingerPose);
+                    }
+                }
             });
         }
     }
-}
-
-// 获取数字名称
-function getNumberName(num) {
-    const names = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
-    return names[num] || '';
 }
 
 // 设置Refill Core功能
 function setupRefillCore() {
     document.getElementById("refill-core").addEventListener("click", () => {
         event.preventDefault();
-        event.stopPropagation();
-
-        console.log("refill-core");
-
-        const rukaPoseList = [
-            [[246, 188, 128, 128], [149, 30, 145, 36, 41, 46]], // 食指
-            [[246, 155, 154, 66], [138, 80, 0, 154, 41, 46]], // 中指
-            [[246, 155, 154, 40], [140, 80, 0, 15, 155, 46]], // 无名指
-            [[246, 155, 154, 25], [140, 62, 0, 15, 29, 143]], // 小指
-        ];
-
-        const delayTime = 350; // 设定延迟时间为350ms
         
-        // 创建完整的序列：从第一个到最后一个，再从最后一个回到第二个
-        const forwardIndices = [...Array(rukaPoseList.length).keys()]; // [0,1,2,3]
-        const backwardIndices = [...forwardIndices].reverse().slice(1); // [3,2,1]
-        const sequenceIndices = [...forwardIndices, ...backwardIndices];
+        // O7_MODIFIED: 根据设备类型执行不同的动作序列
+        if (currentDeviceType === DEVICE_TYPE.O7) {
+            // O7设备的Refill动作序列
+            executeO7RefillSequence();
+        } else {
+            // 原始L10设备的Refill动作序列
+            executeL10RefillSequence();
+        }
+    });
+}
+
+// O7_MODIFIED: O7设备的Refill序列
+function executeO7RefillSequence() {
+    const presets = LinkerHandController.getCurrentPresets();
+    if (!presets) {
+        logMessage('error', `无法找到设备 ${currentDeviceType} 的预设`);
+        return;
+    }
+    
+    const delayTime = 350; // 设定延迟时间为350ms
+    
+    // O7设备的关节序列动作
+    const jointPoseList = [
+        [64, 192, 200, 100, 50, 30, 128],  // 食指展开
+        [64, 100, 64, 200, 60, 40, 128],   // 中指展开
+        [64, 100, 64, 50, 200, 50, 128],   // 无名指展开
+        [64, 100, 64, 50, 60, 200, 128],   // 小指展开
+    ];
+    
+    // 创建完整的序列：从第一个到最后一个，再从最后一个回到第二个
+    const forwardIndices = [...Array(jointPoseList.length).keys()]; 
+    const backwardIndices = [...forwardIndices].reverse().slice(1);
+    const sequenceIndices = [...forwardIndices, ...backwardIndices];
+    
+    logMessage('info', '开始执行O7 Refill Core动作序列...');
+    
+    // 遍历序列索引，执行动作
+    sequenceIndices.forEach((index, step) => {
+        const targetPose = jointPoseList[index];
         
-        // 遍历序列索引，为每个索引创建两个操作（palm和finger）
-        sequenceIndices.forEach((index, step) => {
-            const targetPose = rukaPoseList[index];
-            
-            // 应用palm预设
-            setTimeout(() => {
-                console.log(`Step ${step+1}a: Applying palm preset for pose ${index+1}`);
-                LinkerHandController.applyPalmPreset(targetPose[0]);
-                const palmPose = LinkerHandController.getPalmPoseValues();
-                LinkerHandController.sendPalmPoseToAll(palmPose);
-            }, delayTime * (step * 2)); // 每个完整步骤有两个操作，所以是step*2
-            
-            // 应用finger预设
-            setTimeout(() => {
-                console.log(`Step ${step+1}b: Applying finger preset for pose ${index+1}`);
-                LinkerHandController.applyFingerPreset(targetPose[1]);
-                const fingerPose = LinkerHandController.getFingerPoseValues();
-                LinkerHandController.sendFingerPoseToAll(fingerPose);
-            }, delayTime * (step * 2 + 1)); // 偏移一个delayTime
-        });
+        setTimeout(() => {
+            LinkerHandController.applyFingerPreset(targetPose);
+            const fingerPose = LinkerHandController.getFingerPoseValues();
+            LinkerHandController.sendFingerPoseToAll(fingerPose);
+            logMessage('info', `Refill序列步骤 ${step+1}: 执行关节动作`);
+        }, delayTime * step);
+    });
+}
+
+// 原始L10设备的Refill序列
+function executeL10RefillSequence() {
+    const rukaPoseList = [
+        [[246, 188, 128, 128], [149, 30, 145, 36, 41, 46]], // 食指
+        [[246, 155, 154, 66], [138, 80, 0, 154, 41, 46]],   // 中指
+        [[246, 155, 154, 40], [140, 80, 0, 15, 155, 46]],   // 无名指
+        [[246, 155, 154, 25], [140, 62, 0, 15, 29, 143]],   // 小指
+    ];
+
+    const delayTime = 350; // 设定延迟时间为350ms
+    
+    // 创建完整的序列：从第一个到最后一个，再从最后一个回到第二个
+    const forwardIndices = [...Array(rukaPoseList.length).keys()]; // [0,1,2,3]
+    const backwardIndices = [...forwardIndices].reverse().slice(1); // [3,2,1]
+    const sequenceIndices = [...forwardIndices, ...backwardIndices];
+    
+    logMessage('info', '开始执行L10 Refill Core动作序列...');
+    
+    // 遍历序列索引，为每个索引创建两个操作（palm和finger）
+    sequenceIndices.forEach((index, step) => {
+        const targetPose = rukaPoseList[index];
+        
+        // 应用palm预设
+        setTimeout(() => {
+            LinkerHandController.applyPalmPreset(targetPose[0]);
+            const palmPose = LinkerHandController.getPalmPoseValues();
+            LinkerHandController.sendPalmPoseToAll(palmPose);
+            logMessage('info', `Refill序列步骤 ${step+1}a: 执行掌部动作`);
+        }, delayTime * (step * 2)); // 每个完整步骤有两个操作，所以是step*2
+        
+        // 应用finger预设
+        setTimeout(() => {
+            LinkerHandController.applyFingerPreset(targetPose[1]);
+            const fingerPose = LinkerHandController.getFingerPoseValues();
+            LinkerHandController.sendFingerPoseToAll(fingerPose);
+            logMessage('info', `Refill序列步骤 ${step+1}b: 执行手指动作`);
+        }, delayTime * (step * 2 + 1)); // 偏移一个delayTime
     });
 }
 
@@ -900,6 +1379,40 @@ function setupSliderEvents() {
     speedSlider.addEventListener('input', function() {
         speedDisplay.textContent = this.value;
     });
+
+    // O7_MODIFIED: 添加速度预设按钮事件
+    setupSpeedPresets();
+}
+
+// O7_MODIFIED: 设置速度预设按钮
+function setupSpeedPresets() {
+    const speedPresets = {
+        'slow': LinkerHandController.PRESETS.SPEEDS.SLOW,
+        'medium': LinkerHandController.PRESETS.SPEEDS.MEDIUM,
+        'fast': LinkerHandController.PRESETS.SPEEDS.FAST,
+        'mixed': LinkerHandController.PRESETS.SPEEDS.MIXED
+    };
+    
+    // 绑定速度预设按钮事件
+    Object.entries(speedPresets).forEach(([id, preset]) => {
+        const button = document.getElementById(`speed-${id}`);
+        if (button) {
+            button.addEventListener('click', () => {
+                if (currentDeviceType !== DEVICE_TYPE.O7) {
+                    logMessage('warning', '速度预设仅适用于O7设备');
+                    return;
+                }
+                
+                LinkerHandController.applySpeedPreset(preset);
+                
+                // 立即发送速度到所有启用的手
+                const speeds = LinkerHandController.getSpeedValues();
+                LinkerHandController.sendSpeedsToAll(speeds);
+                
+                logMessage('success', `已应用 ${id} 速度预设`);
+            });
+        }
+    });
 }
 
 // 发送所有启用手部的手指姿态
@@ -911,7 +1424,7 @@ async function sendAllFingerPoses() {
     }
 
     const pose = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
         pose.push(parseInt(document.getElementById(`finger${i}`).value));
     }
 
@@ -952,7 +1465,8 @@ async function sendFingerPoseToHand(config, pose) {
                 interface: config.interface,
                 pose: pose,
                 handType: config.handType,
-                handId: handTypeIds[config.handType]
+                handId: handTypeIds[config.handType],
+                deviceType: currentDeviceType  // 添加设备类型
             })
         });
 
@@ -978,7 +1492,8 @@ async function sendPalmPoseToHand(config, pose) {
                 interface: config.interface,
                 pose: pose,
                 handType: config.handType,
-                handId: handTypeIds[config.handType]
+                handId: handTypeIds[config.handType],
+                deviceType: currentDeviceType  // 添加设备类型
             })
         });
 
@@ -1012,7 +1527,7 @@ async function setPresetPoseForAll(preset) {
 // 为指定手部设置预设姿势
 async function setPresetPoseToHand(config, preset) {
     try {
-        const response = await fetch(`/api/preset/${preset}?interface=${config.interface}&handType=${config.handType}`, {
+        const response = await fetch(`/api/preset/${preset}?interface=${config.interface}&handType=${config.handType}&deviceType=${currentDeviceType}`, {
             method: 'POST'
         });
 
@@ -1055,7 +1570,8 @@ async function startAnimationForHand(config, type, speed) {
                 type: type,
                 speed: speed,
                 handType: config.handType,
-                handId: handTypeIds[config.handType]
+                handId: handTypeIds[config.handType],
+                deviceType: currentDeviceType  // 添加设备类型
             })
         });
 
@@ -1096,7 +1612,8 @@ async function stopAnimationForHand(config) {
                 interface: config.interface,
                 type: 'stop',
                 handType: config.handType,
-                handId: handTypeIds[config.handType]
+                handId: handTypeIds[config.handType],
+                deviceType: currentDeviceType  // 添加设备类型
             })
         });
 
@@ -1646,4 +2163,346 @@ window.startNumberCountdown = startNumberCountdown;
 window.startMexicanWave = startMexicanWave;
 window.startFistOpenWave = startFistOpenWave;
 window.startBidirectionalWave = startBidirectionalWave;
+
+// O7_MODIFIED: 发送所有启用手部的关节速度
+async function sendAllSpeeds() {
+    if (currentDeviceType !== DEVICE_TYPE.O7) {
+        logMessage('warning', '速度控制仅适用于O7设备');
+        return;
+    }
+
+    const enabledHands = getEnabledHands();
+    if (enabledHands.length === 0) {
+        logMessage('error', '没有启用的手部');
+        return;
+    }
+
+    const speeds = LinkerHandController.getSpeedValues();
+    logMessage('info', `发送关节速度到 ${enabledHands.length} 个启用的手部...`);
+
+    for (const config of enabledHands) {
+        await sendSpeedsToHand(config, speeds);
+    }
+}
+
+// O7_MODIFIED: 发送速度到指定手部
+async function sendSpeedsToHand(config, speeds) {
+    if (currentDeviceType !== DEVICE_TYPE.O7) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/speeds', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                interface: config.interface,
+                speeds: speeds,
+                handType: config.handType,
+                handId: handTypeIds[config.handType],
+                deviceType: DEVICE_TYPE.O7
+            })
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+            const handName = config.handType === 'left' ? '左手' : '右手';
+            logMessage('success', `${config.interface} (${handName}): 关节速度发送成功 [${speeds.join(', ')}]`);
+        } else {
+            logMessage('error', `${config.interface}: ${data.error}`);
+        }
+    } catch (error) {
+        logMessage('error', `${config.interface}: 速度控制发送失败 - ${error.message}`);
+    }
+}
+
+// O7_MODIFIED: O7设备特有的动画序列
+function startO7SequentialAnimation(type = 'ripple', interval = 300, cycles = 3) {
+    if (currentDeviceType !== DEVICE_TYPE.O7) {
+        logMessage('warning', '此动画仅适用于O7设备');
+        return;
+    }
+    
+    const enabledHands = getEnabledHands();
+    if (enabledHands.length === 0) {
+        logMessage('error', '没有启用的手部');
+        return;
+    }
+    
+    // 确保按接口名称排序
+    const sortedHands = enabledHands.sort((a, b) => {
+        const getInterfaceNumber = (iface) => {
+            const match = iface.match(/(\d+)$/);
+            return match ? parseInt(match[1]) : 0;
+        };
+        return getInterfaceNumber(a.interface) - getInterfaceNumber(b.interface);
+    });
+    
+    logMessage('info', `开始O7设备 ${type} 动画，间隔: ${interval}ms, 循环: ${cycles}次`);
+    
+    // O7设备的特殊动画预设
+    const o7Animations = {
+        ripple: {
+            name: '波纹动画',
+            sequence: [
+                [128, 200, 128, 128, 128, 128, 128], // 拇指旋转
+                [200, 128, 128, 128, 128, 128, 128], // 拇指关节
+                [128, 128, 200, 128, 128, 128, 128], // 食指
+                [128, 128, 128, 200, 128, 128, 128], // 中指
+                [128, 128, 128, 128, 200, 128, 128], // 无名指
+                [128, 128, 128, 128, 128, 200, 128], // 小指
+                [128, 128, 128, 128, 128, 128, 200], // 关节7
+            ],
+            // 为每个关节设置不同的速度
+            speeds: [
+                [200, 150, 100, 100, 100, 100, 100], // 拇指快速
+                [100, 200, 150, 100, 100, 100, 100], // 拇指旋转快速
+                [100, 100, 200, 150, 100, 100, 100], // 食指快速
+                [100, 100, 100, 200, 150, 100, 100], // 中指快速
+                [100, 100, 100, 100, 200, 150, 100], // 无名指快速
+                [100, 100, 100, 100, 100, 200, 150], // 小指快速
+                [150, 100, 100, 100, 100, 100, 200], // 关节7快速
+            ]
+        },
+        wave: {
+            name: '波浪动画',
+            sequence: [
+                [64, 64, 255, 64, 64, 64, 128], // 食指竖起
+                [64, 64, 64, 255, 64, 64, 128], // 中指竖起
+                [64, 64, 64, 64, 255, 64, 128], // 无名指竖起
+                [64, 64, 64, 64, 64, 255, 128], // 小指竖起
+                [255, 64, 64, 64, 64, 64, 128], // 拇指竖起
+            ]
+        },
+        dance: {
+            name: '舞蹈动画',
+            sequence: [
+                [128, 128, 128, 128, 128, 128, 128], // 中立
+                [255, 255, 255, 64, 64, 64, 128],    // 前3指张开
+                [64, 64, 64, 255, 255, 255, 128],    // 后3指张开
+                [255, 64, 255, 64, 255, 64, 128],    // 交替张开
+                [64, 255, 64, 255, 64, 255, 128],    // 交替张开反向
+            ]
+        },
+        orchestra: {
+            name: '指挥动画',
+            sequence: [
+                [128, 200, 200, 200, 200, 200, 128], // 准备
+                [64, 200, 200, 200, 200, 200, 128],  // 下挥
+                [255, 200, 200, 200, 200, 200, 128], // 上挥
+                [128, 200, 64, 64, 64, 64, 128],     // 前倾
+                [128, 64, 200, 200, 200, 200, 128],  // 后仰
+            ]
+        }
+    };
+    
+    const animation = o7Animations[type] || o7Animations.ripple;
+    const sequence = animation.sequence;
+    const speeds = animation.speeds || Array(sequence.length).fill([100, 100, 100, 100, 100, 100, 100]);
+    
+    // 执行动画循环
+    (async function() {
+        for (let cycle = 0; cycle < cycles; cycle++) {
+            logMessage('info', `${animation.name} - 第 ${cycle + 1}/${cycles} 轮`);
+            
+            // 每个动作姿势
+            for (let poseIndex = 0; poseIndex < sequence.length; poseIndex++) {
+                const currentPose = sequence[poseIndex];
+                const currentSpeed = speeds[poseIndex];
+                
+                // 先设置速度(如果有)
+                if (currentSpeed) {
+                    for (const hand of sortedHands) {
+                        await sendSpeedsToHand(hand, currentSpeed);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                }
+                
+                // 然后设置姿势
+                for (const hand of sortedHands) {
+                    await sendFingerPoseToHand(hand, currentPose);
+                    await new Promise(resolve => setTimeout(resolve, interval));
+                }
+                
+                // 等待所有手完成当前动作
+                await new Promise(resolve => setTimeout(resolve, interval));
+            }
+            
+            // 循环间隔
+            if (cycle < cycles - 1) {
+                await new Promise(resolve => setTimeout(resolve, interval * 2));
+            }
+        }
+        
+        // 恢复默认位置
+        logMessage('info', '动画完成，恢复默认位置...');
+        const defaultPose = [128, 128, 128, 128, 128, 128, 128];
+        const defaultSpeed = [100, 100, 100, 100, 100, 100, 100];
+        
+        for (const hand of sortedHands) {
+            await sendSpeedsToHand(hand, defaultSpeed);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await sendFingerPoseToHand(hand, defaultPose);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        logMessage('success', `O7设备 ${animation.name} 动画完成！`);
+    })();
+}
+
+// 添加特定O7动画函数
+function startO7RippleAnimation() {
+    startO7SequentialAnimation('ripple', 300, 2);
+}
+
+function startO7WaveAnimation() {
+    startO7SequentialAnimation('wave', 400, 3);
+}
+
+function startO7DanceAnimation() {
+    startO7SequentialAnimation('dance', 500, 2);
+}
+
+function startO7OrchestraAnimation() {
+    startO7SequentialAnimation('orchestra', 600, 2);
+}
+
+// 将函数导出到全局
+window.startO7SequentialAnimation = startO7SequentialAnimation;
+window.startO7RippleAnimation = startO7RippleAnimation;
+window.startO7WaveAnimation = startO7WaveAnimation;
+window.startO7DanceAnimation = startO7DanceAnimation;
+window.startO7OrchestraAnimation = startO7OrchestraAnimation;
+
+// O7_MODIFIED: 添加设备类型检测功能
+function detectDeviceType() {
+    // 获取第一个启用的手部配置
+    const enabledHands = getEnabledHands();
+    if (enabledHands.length === 0) {
+        logMessage('warning', '没有启用的手部，无法检测设备类型');
+        return;
+    }
+
+    const testHand = enabledHands[0];
+    logMessage('info', `开始检测设备类型，使用接口: ${testHand.interface}`);
+
+    // 构造测试姿势 - 使用7个关节的姿势
+    const testPose = [128, 128, 128, 128, 128, 128, 200]; // 最后一个关节设置为200
+    
+    // 先尝试发送O7设备的姿势
+    sendFingerPoseToHand(testHand, testPose)
+        .then(() => {
+            // 如果命令成功发送，等待一段时间后切换回默认姿势
+            setTimeout(() => {
+                const defaultPose = currentDeviceType === DEVICE_TYPE.O7 ? 
+                    [128, 128, 128, 128, 128, 128, 128] : // O7默认姿势
+                    [128, 128, 128, 128, 128, 128];       // L10默认姿势
+                
+                sendFingerPoseToHand(testHand, defaultPose)
+                    .then(() => {
+                        // 成功发送7关节命令，确认是O7设备
+                        if (currentDeviceType !== DEVICE_TYPE.O7) {
+                            logMessage('success', '检测到O7设备，正在切换设备类型...');
+                            switchDeviceType(DEVICE_TYPE.O7);
+                            // 更新UI显示
+                            updateUIForDeviceType(DEVICE_TYPE.O7);
+                            // 更新服务器设备类型
+                            updateServerDeviceType(DEVICE_TYPE.O7);
+                        } else {
+                            logMessage('info', '确认当前设备为O7型号');
+                        }
+                    })
+                    .catch(() => {
+                        // 如果重置命令失败，可能是L10设备
+                        if (currentDeviceType !== DEVICE_TYPE.L10) {
+                            logMessage('info', '检测到L10设备，正在切换设备类型...');
+                            switchDeviceType(DEVICE_TYPE.L10);
+                            // 更新UI显示
+                            updateUIForDeviceType(DEVICE_TYPE.L10);
+                            // 更新服务器设备类型
+                            updateServerDeviceType(DEVICE_TYPE.L10);
+                        } else {
+                            logMessage('info', '确认当前设备为L10型号');
+                        }
+                    });
+            }, 500);
+        })
+        .catch(() => {
+            // 如果命令发送失败，可能是L10设备不支持7关节控制
+            if (currentDeviceType !== DEVICE_TYPE.L10) {
+                logMessage('info', '检测到L10设备，正在切换设备类型...');
+                switchDeviceType(DEVICE_TYPE.L10);
+                // 更新UI显示
+                updateUIForDeviceType(DEVICE_TYPE.L10);
+                // 更新服务器设备类型
+                updateServerDeviceType(DEVICE_TYPE.L10);
+            } else {
+                logMessage('info', '确认当前设备为L10型号');
+            }
+        });
+}
+
+// 更新设备类型显示
+function updateDeviceTypeDisplay() {
+    const deviceTypeDisplay = document.getElementById('device-type-display');
+    const currentDeviceTypeElement = document.getElementById('current-device-type');
+    const deviceTypeSelector = document.getElementById('device-type');
+    
+    if (deviceTypeDisplay) {
+        deviceTypeDisplay.textContent = currentDeviceType;
+    }
+    if (currentDeviceTypeElement) {
+        currentDeviceTypeElement.textContent = currentDeviceType;
+    }
+    if (deviceTypeSelector) {
+        deviceTypeSelector.value = currentDeviceType;
+    }
+    
+    // 更新UI元素显示状态
+    updateUIForDeviceType(currentDeviceType);
+}
+
+// 切换设备类型
+function switchDeviceType(deviceType) {
+    if (deviceType !== DEVICE_TYPE.L10 && deviceType !== DEVICE_TYPE.O7) {
+        logMessage('error', `无效的设备类型: ${deviceType}`);
+        return;
+    }
+    
+    currentDeviceType = deviceType;
+    logMessage('info', `切换到${deviceType}设备模式`);
+    
+    // 更新显示
+    updateDeviceTypeDisplay();
+    
+    // 更新服务器设备类型
+    updateServerDeviceType(deviceType);
+    
+    // 重置所有手部到默认姿势
+    resetAllHands();
+}
+
+// 初始化时获取设备类型
+async function fetchDeviceType() {
+    try {
+        const response = await fetch('/api/device-type');
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data && data.data.deviceType) {
+            const serverDeviceType = data.data.deviceType;
+            if (serverDeviceType !== currentDeviceType) {
+                logMessage('info', `服务器设备类型(${serverDeviceType})与当前类型(${currentDeviceType})不一致，正在同步...`);
+                switchDeviceType(serverDeviceType);
+            } else {
+                updateDeviceTypeDisplay();
+            }
+        } else {
+            logMessage('warning', '无法获取服务器设备类型，使用默认类型');
+            updateDeviceTypeDisplay();
+        }
+    } catch (error) {
+        logMessage('error', `获取设备类型失败: ${error.message}`);
+        updateDeviceTypeDisplay();
+    }
+}
 

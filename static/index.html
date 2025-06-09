@@ -3,11 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>灵巧手 Linker Hand L10 控制面板</title>
+    <title>灵巧手 Linker Hand L10/O7 控制面板</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>灵巧手 Linker Hand L10 控制面板</h1>
+    <h1>灵巧手 Linker Hand <span id="device-type-display">L10/O7</span> 控制面板</h1>
+    
+    <!-- 设备切换 -->
+    <div class="device-type-selector">
+        <label for="device-type">设备型号:</label>
+        <select id="device-type">
+            <option value="L10">L10 (5指)</option>
+            <option value="O7">O7 (7关节)</option>
+        </select>
+        <button id="detect-device-type" class="refresh-button" style="font-size: 12px; margin-left: 10px;">自动检测</button>
+        <span id="device-info" class="info-badge"></span>
+    </div>
     
     <!-- 手部配置面板 -->
     <div class="hands-config">
@@ -30,8 +41,9 @@
     <div class="global-controls">
         <h4>🎮 全局控制</h4>
         <div class="control-buttons-grid">
-            <button id="send-all-finger-poses" class="global">发送所有手指姿态</button>
+            <button id="send-all-finger-poses" class="global">发送所有关节姿态</button>
             <button id="send-all-palm-poses" class="global">发送所有掌部姿态</button>
+            <button id="send-all-speeds" class="global" data-device-type="O7">发送所有关节速度</button>
             <button id="reset-all-hands" class="stop">重置所有手部</button>
             <button id="stop-all-animations" class="stop">停止所有动画</button>
         </div>
@@ -39,10 +51,11 @@
     
     <div class="container">
         <div class="control-panel">
-            <h2>手指控制 <span class="info-badge">指令0x01</span></h2>
+            <h2>关节控制 <span class="info-badge">指令0x01</span></h2>
             
             <div class="slider-group">
-                <h3>手指关节控制</h3>
+                <h3>关节位置控制</h3>
+                <!-- O7_MODIFIED: 修改为7个关节的控制，初始显示6个 -->
                 <div class="slider-container">
                     <div class="slider-label">
                         <span>拇指 (Thumb)</span>
@@ -91,9 +104,18 @@
                     <input type="range" id="finger5" class="finger-slider" min="0" max="255" value="64">
                 </div>
                
+                <!-- O7_MODIFIED: 第7个关节控制，仅在O7设备模式下显示 -->
+                <div class="slider-container" id="finger6-container" style="display: none;">
+                    <div class="slider-label">
+                        <span>关节7 (Joint 7)</span>
+                        <span class="value-display" id="finger6-value">128</span>
+                    </div>
+                    <input type="range" id="finger6" class="finger-slider" min="0" max="255" value="128">
+                </div>
             </div>
             
-            <div class="slider-group">
+            <!-- 设备类型切换改变显示内容 -->
+            <div class="slider-group" id="palm-control-panel">
                 <h3>掌部控制 <span class="info-badge">指令0x04</span></h3>
                 <div class="slider-container">
                     <div class="slider-label">
@@ -127,6 +149,77 @@
                     <input type="range" id="palm3" class="finger-slider" min="0" max="255" value="128">
                 </div>
             </div>
+            
+            <!-- O7_MODIFIED: 添加速度控制面板，仅在O7设备模式下显示 -->
+            <div class="slider-group" id="speed-control-panel" style="display: none;">
+                <h3>关节速度控制 <span class="info-badge">指令0x05</span></h3>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节1速度</span>
+                        <span class="value-display" id="speed0-value">100</span>
+                    </div>
+                    <input type="range" id="speed0" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节2速度</span>
+                        <span class="value-display" id="speed1-value">100</span>
+                    </div>
+                    <input type="range" id="speed1" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节3速度</span>
+                        <span class="value-display" id="speed2-value">100</span>
+                    </div>
+                    <input type="range" id="speed2" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节4速度</span>
+                        <span class="value-display" id="speed3-value">100</span>
+                    </div>
+                    <input type="range" id="speed3" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节5速度</span>
+                        <span class="value-display" id="speed4-value">100</span>
+                    </div>
+                    <input type="range" id="speed4" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节6速度</span>
+                        <span class="value-display" id="speed5-value">100</span>
+                    </div>
+                    <input type="range" id="speed5" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>关节7速度</span>
+                        <span class="value-display" id="speed6-value">100</span>
+                    </div>
+                    <input type="range" id="speed6" class="speed-slider" min="0" max="255" value="100">
+                </div>
+                
+                <!-- 添加速度预设按钮 -->
+                <div class="speed-presets">
+                    <h4>速度预设</h4>
+                    <div class="control-buttons">
+                        <button id="speed-slow" class="preset">慢速</button>
+                        <button id="speed-medium" class="preset">中速</button>
+                        <button id="speed-fast" class="preset">快速</button>
+                        <button id="speed-mixed" class="preset">混合速度</button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="animation-panel">
@@ -146,7 +239,7 @@
                 <button class="preset" id="pose-ok">OK!</button>
             </div>
 
-            <h3>NUM Pose</h3>
+            <h3>数字手势</h3>
             <div class="preset-grid">
                 <button class="preset-num-pose" id="pose-1">1</button>
                 <button class="preset-num-pose" id="pose-2">2</button>
@@ -157,20 +250,8 @@
                 <button class="preset-num-pose" id="pose-7">7</button>
                 <button class="preset-num-pose" id="pose-8">8</button>
                 <button class="preset-num-pose" id="pose-9">9</button>
-                <button onclick="triggerButtonsSequentially()">auto</button>
-                <button id="refill-core">Refill core</button>
-                <button onclick="window.startSequentialHandAnimation()">SequentialHandAnimation</button>
-                <button onclick="window.startCustomSequentialAnimation()">CustomSequentialAnimation</button>
-                <button onclick="window.startWaveAnimation()">WaveAnimation</button>
-                <button onclick="window.startThumbsUpRelay()">ThumbsUpRelay</button>
-                <button onclick="window.startPointingRelay()">PointingRelay</button>
-                <button onclick="window.startNumberCountdown()">NumberCountdown</button>
-                <button onclick="window.startMexicanWave()">MexicanWave</button>
-                <button onclick="window.startFistOpenWave()">FistOpenWave</button>
-                <button onclick="window.startBidirectionalWave()">BidirectionalWave</button>
-
-
-
+                <button onclick="triggerButtonsSequentially()">自动演示</button>
+                <button id="refill-core">Refill Core</button>
             </div>
 
             <h3 style="margin-top: 20px;">动画控制</h3>
@@ -187,11 +268,25 @@
                     <button id="start-sway">横向摆动</button>
                     <button id="stop-animation" class="stop">停止动画</button>
                 </div>
+                
+                <!-- O7_MODIFIED: 添加O7设备特有动画 -->
+                <div class="o7-animations" id="o7-animation-panel" style="display: none; margin-top: 15px;">
+                    <h4>O7专用动画</h4>
+                    <div class="control-buttons">
+                        <button onclick="startO7RippleAnimation()" class="preset">波纹动画</button>
+                        <button onclick="startO7WaveAnimation()" class="preset">手指波浪</button>
+                        <button onclick="startO7DanceAnimation()" class="preset">指尖舞蹈</button>
+                        <button onclick="startO7OrchestraAnimation()" class="preset">指挥家</button>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="status-panel">
             <h2>状态监控</h2>
+            <div class="device-status">
+                <h3>当前设备类型: <span id="current-device-type">加载中...</span></h3>
+            </div>
             <div class="status-output" id="status-log">
                 <div class="log-entry">
                     <span class="status-indicator status-info"></span>
@@ -215,16 +310,12 @@
     </div>
 
     <footer>
-        <p style="
-        font-style: italic;
-        font-size: 12px;
-        padding: 12px;">使用 CAN 进行连接后，或许需要手动启动 Linux 网卡：<code style="
-            border: 1px solid pink;
-            padding: 4px;
-            border-radius: 4px;
-            background: #0a0a0a;
-            font-size: 10px;
-            color: #fff;">sudo ip link set can0 up type can bitrate 1000000</code></p>
+        <p style="font-style: italic; font-size: 12px; padding: 12px;">
+            使用 CAN 进行连接后，或许需要手动启动 Linux 网卡：
+            <code style="border: 1px solid pink; padding: 4px; border-radius: 4px; background: #0a0a0a; font-size: 10px; color: #fff;">
+                sudo ip link set can0 up type can bitrate 1000000
+            </code>
+        </p>
     </footer>
 
     <script src="/static/script.js"></script>
