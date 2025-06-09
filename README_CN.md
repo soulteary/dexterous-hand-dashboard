@@ -1,10 +1,13 @@
-# Dexterous Hand Dashboard 项目文档
 
-## 项目概述
+# 🚀 Dexterous Hand Dashboard 项目文档
+![# Dexterous Hand Dashboard  ](assets/banner.png)
+[English](README.md)
+#### 灵心巧手操作仪表盘linkerhand👋!
+## 🎯 项目概述
 
 **Dexterous Hand Dashboard** 是专为 LinkerHand 灵巧手设备开发的控制仪表盘服务。该服务基于 Golang 开发，提供灵活的 RESTful API 接口，可实现手指与掌部姿态控制、预设动作执行及实时传感器数据监控，并支持动态配置手型（左手或右手）及 CAN 接口。
 
-## 功能特性
+## ✨ 功能特性
 
 * **动态手型配置**：支持左手和右手手型的动态切换。
 * **灵活接口配置**：支持多种 CAN 接口（如 `can0`, `can1`），可通过命令行参数或环境变量动态设置。
@@ -14,7 +17,7 @@
 * **传感器数据实时监控**：提供接口压力数据的实时模拟和更新。
 * **健康检查与服务监控**：实时监控 CAN 服务状态和接口活跃情况。
 
-## API 接口
+## 🛠️ API 接口
 
 ### 手型配置
 
@@ -76,7 +79,7 @@
 
 系统健康检查端点。
 
-## 配置选项
+## 🔧 配置选项
 
 通过命令行参数或环境变量进行配置：
 
@@ -85,19 +88,19 @@
 * `DEFAULT_INTERFACE` 或 `-interface`：默认 CAN 接口。
 * `CAN_INTERFACES` 或 `-can-interfaces`：配置可用的 CAN 接口列表。
 
-## 使用示例
+## 💡 使用示例
 
 ```bash
 ./control-service -can-interfaces can0,can1,vcan0
 CAN_INTERFACES=can0,can1 ./control-service
 ```
 
-## 系统运行要求
+## 🔧 系统运行要求
 
 * Golang 环境 (1.20+)
 * CAN 通信服务
 
-## 启动方式
+## 🚀 启动方式
 
 启动控制服务：
 
@@ -105,14 +108,14 @@ CAN_INTERFACES=can0,can1 ./control-service
 go run main.go -can-url http://localhost:5260 -port 9099
 ```
 
-## 日志与监控
+## 📊 日志与监控
 
 服务提供详尽的日志输出，包括接口状态、动作发送情况及错误提示，便于快速诊断与排查问题。
 
-## 贡献指南
+## 🤝 贡献指南
 
 欢迎社区开发者贡献代码、报告 Bug 或提交功能建议。
 
-## 许可证
+## 📄 许可证
 
 本项目使用 GPL-3.0 license 开源许可。
