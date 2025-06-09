@@ -57,24 +57,23 @@ sudo ip link set can1 up type can bitrate 1000000
 ```
 
 ### 4. 启动服务
+#### 系统运行要求
+Golang 环境 (1.20+)
+CAN 通信服务
+#### 启动方式
+启动控制服务：
 ```bash
-# 基本启动
-go run main.go
-
-# 指定CAN服务URL
-go run main.go -can-url http://192.168.1.100:8080
-
-# 指定端口和接口
-go run main.go -port 9099 -interface can0 -can-interfaces can0,can1
-
-# 指定设备类型
-go run main.go -device-type O7
+go run main.go -can-url http://localhost:5260 -port 9099
 ```
+#### 日志与监控
+服务提供详尽的日志输出，包括接口状态、动作发送情况及错误提示，便于快速诊断与排查问题。
+
+
 
 ## ⚙️ 配置参数
 
 ### 命令行参数
-- `-can-url`: CAN服务URL（默认: http://192.168.128.35:5260）
+- `-can-url`: CAN服务URL（默认: http://localhost:5260）
 - `-port`: Web服务端口（默认: 9099）
 - `-interface`: 默认CAN接口
 - `-can-interfaces`: 支持的CAN接口列表（逗号分隔）
