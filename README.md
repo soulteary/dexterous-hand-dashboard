@@ -1,7 +1,7 @@
 
 # 🚀 Dexterous Hand Dashboard Project Documentation
 ![# Dexterous Hand Dashboard  ](assets/banner.png)
-[English](README.md)
+[中文](README_CN.md)
 #### Dexterous hand-operated dashboard for LinkerHand 👋!
 
 ## 🎯 Project Overview
