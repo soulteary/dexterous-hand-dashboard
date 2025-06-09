@@ -30,9 +30,8 @@
 - **设备类型检测**: 自动检测和适配设备类型
 
 ## 📋 系统要求
-
-- Go 1.16+
-- 现代浏览器（Chrome、Firefox、Safari、Edge）
+#### 系统运行要求
+- Golang 环境 (1.20+)
 - CAN总线接口
 - Linux系统（用于CAN接口配置）
 
@@ -57,9 +56,7 @@ sudo ip link set can1 up type can bitrate 1000000
 ```
 
 ### 4. 启动服务
-#### 系统运行要求
-Golang 环境 (1.20+)
-CAN 通信服务
+
 #### 启动方式
 启动控制服务：
 ```bash
