@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机械手控制面板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+        }
+        .finger-name {
+            width: 120px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>机械手控制面板</h1>
+    <div class="control-panel">
+        <div class="mode-selector">
+            <label>
+                <input type="radio" name="controlMode" value="0x01" checked> 弯曲控制
+            </label>
+            <label>
+                <input type="radio" name="controlMode" value="0x05"> 速度控制
+            </label>
+        </div>
+        
+        <div id="sliders">
+            <!-- 滑块将通过JavaScript动态生成 -->
+        </div>
+    </div>
+    
+    <div id="status" class="status" style="display: none;"></div>
+
+    <script>
+        // 手指名称
+        const fingerNames = [
+            "拇指弯曲",
+            "拇指根部左右",
+            "食指弯曲",
+            "中指弯曲",
+            "无名指弯曲",
+            "小拇指弯曲",
+            "大拇指上下"
+        ];
+
+        // 初始化滑块
+        function initSliders() {
+            const slidersContainer = document.getElementById('sliders');
+            slidersContainer.innerHTML = '';
+            
+            fingerNames.forEach((name, index) => {
+                const container = document.createElement('div');
+                container.className = 'slider-container';
+                
+                const label = document.createElement('div');
+                label.className = 'slider-label';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'finger-name';
+                nameSpan.textContent = name;
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'value';
+                valueSpan.textContent = '128';
+                
+                label.appendChild(nameSpan);
+                label.appendChild(valueSpan);
+                
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = '0';
+                slider.max = '255';
+                slider.value = '128';
+                slider.dataset.index = index;
+                
+                slider.addEventListener('input', function() {
+                    valueSpan.textContent = this.value;
+                });
+                
+                slider.addEventListener('change', function() {
+                    sendControlCommand();
+                });
+                
+                container.appendChild(label);
+                container.appendChild(slider);
+                slidersContainer.appendChild(container);
+            });
+        }
+        
+        // 发送控制命令
+        async function sendControlCommand() {
+            const mode = document.querySelector('input[name="controlMode"]:checked').value;
+            const sliders = document.querySelectorAll('input[type="range"]');
+            
+            // 构造数据数组
+            const data = [parseInt(mode, 16)];
+            sliders.forEach(slider => {
+                data.push(parseInt(slider.value));
+            });
+            
+            // 补足8个字节
+            while (data.length < 8) {
+                data.push(0);
+            }
+            
+            // 构造CAN消息
+            const canMessage = {
+                interface: "can0",
+                id: 0x27,
+                data: data
+            };
+            
+            try {
+                const response = await fetch('/api/control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(canMessage)
+                });
+                
+                const result = await response.json();
+                
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '控制命令发送成功';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = `控制命令发送失败: ${result.error || '未知错误'}`;
+                }
+                
+                // 3秒后隐藏状态信息
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `网络错误: ${error.message}`;
+                
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            initSliders();
+            
+            // 模式切换时重新发送命令
+            document.querySelectorAll('input[name="controlMode"]').forEach(radio => {
+                radio.addEventListener('change', sendControlCommand);
+            });
+        });
+    </script>
+</body>
+</html>
