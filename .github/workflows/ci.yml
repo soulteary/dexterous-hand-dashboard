@@ -26,3 +26,11 @@ jobs:
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./...
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./...
+
+      - name: Build release archives without publishing
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: v2.18.3
+          args: release --snapshot --clean --skip=publish,docker
+        env:
+          GITHUB_USERNAME: ${{ github.repository_owner }}
