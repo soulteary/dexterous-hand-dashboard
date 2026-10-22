@@ -27,7 +27,7 @@ archives:
     files:
       - static
       - README.md
-      - README_CN.md
+      - docs/README_CN.md
       - LICENSE
 
 release:
